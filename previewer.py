@@ -1,8 +1,8 @@
 import subprocess
-import sys,os
+import os
 import curses
+import sys
 import time
-from _curses import getmouse
 
 class suspend_curses():
     """Context Manager to temporarily leave curses mode"""
@@ -18,11 +18,6 @@ class suspend_curses():
 
 
 class CursesDirlist:
-    kind = 'canine'  # class variable shared by all instances
-
-    # root_dir = "/home/mgustran/01-development/app-ng-invoice/"
-    # make sure that not ends in slash
-    # root_dir = root_dir[:-1] if root_dir.endswith("/") else root_dir
 
     counter_files = 0
     max_chars = 0
@@ -57,7 +52,6 @@ class CursesDirlist:
                 "file_path": os.path.join(target_dir, x),
                 "file_name": x,
                 "file_size": os.path.getsize(os.path.join(target_dir, x)) if not is_dir else 0,
-                # "files": reload_dirlist(os.path.join(target_dir, x)) if is_dir else None,
                 "level": os.path.join(target_dir, x).replace(self.root_dir, "").count("/") - 1,
                 "is_open": False,
             }
@@ -84,7 +78,6 @@ class CursesDirlist:
             if idx < self.scroll_top:
                 continue
 
-            # index.append(dir['file_path'])
             if y > (self.height - 2):
                 continue
 
@@ -94,10 +87,6 @@ class CursesDirlist:
                 if dir["file_name"].startswith("."):
                     stdscr.attron(curses.A_DIM)
                 dir["formatted_dirname"] = dir["formatted_dirname"].replace(" + " if dir["is_open"] else " - ", " - " if dir["is_open"] else " + ")
-                # if dir["is_open"]:
-                #     dir["formatted_dirname"] = dir["formatted_dirname"].replace(" + ", " - ")
-                # else:
-                #     dir["formatted_dirname"] = dir["formatted_dirname"].replace(" - ", " + ")
             if cursor_y == y:
                 stdscr.attron(curses.color_pair(2))
                 stdscr.addstr(y, 0, dir["formatted_dirname"])
@@ -134,6 +123,7 @@ class CursesDirlist:
         stdscr.clear()
         stdscr.refresh()
 
+        # Setup mouse and keyboard inputs
         curses.curs_set(0)
         stdscr.keypad(1)
         # curses.mousemask(1)
@@ -141,7 +131,7 @@ class CursesDirlist:
 
         # Start colors in curses
         curses.start_color()
-        curses.init_color(10, 400,   400,   900)
+        curses.init_color(10, 400,   400,   900)  # Blue going to magenta
         curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLUE)
         curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
@@ -151,17 +141,14 @@ class CursesDirlist:
         self.dirlist_final = self.reload_dirlist(self.root_dir)
         self.full_index = self.dirlist_final.copy()
         self.max_chars = len(max(self.full_index, key=lambda x: len(x["formatted_dirname"]))["formatted_dirname"])
-        # for dir in self.dirlist_final:
-        #     dir['files'] = None
 
         subtitle_str = "Written by mgustran"
 
-        # Loop where k is the last character pressed
+        # Loop until q pressed
         while (k != ord('q')):
 
             # Initialization
             stdscr.clear()
-            # global height, width
             self.height, self.width = stdscr.getmaxyx()
 
             if k == curses.KEY_DOWN:
@@ -170,7 +157,6 @@ class CursesDirlist:
                     if cursor_y < self.height - 2 and cursor_y < len(self.full_index) - 1:
                         cursor_y = cursor_y + 1
                     else:
-                        # global scroll_top
                         if len(self.full_index) - (self.scroll_top + 1 if self.scroll_top > 0 else 0) > (self.height - 2):
                             self.scroll_top = self.scroll_top + 1
                 else:
@@ -266,14 +252,12 @@ class CursesDirlist:
                         # subprocess.call(["guake", "--split-vertical", "-e", f"micro {dir1}"])
                         subprocess.call(["micro", f"{dir1}"])
 
-                        # os.system(f"micro {dir1}")
-                        # os.system(f"guake --split-vertical -e \"micro {dir1}\"")
-
-            elif k == 104:  # H / Highlight
-
-                if cursor_y == -1:
-
-                    self.highlight_positions[0] = curses.getmouse()[2]
+            # todo: Redo with mouse event type
+            # elif k == 104:  # H / Highlight
+            #
+            #     if cursor_y == -1:
+            #
+            #         self.highlight_positions[0] = curses.getmouse()[2]
 
             elif k == curses.KEY_MOUSE:
                 try:
@@ -302,11 +286,9 @@ class CursesDirlist:
             title = f"Curses example {str(curses.can_change_color())}"[:self.width-1]
             subtitle = f"{subtitle_str}"[:self.width-1]
             keystr = "Last key pressed: {}".format(k)[:self.width-1]
-            # statusbarstr = "'q' -> exit | 'c' -> changes | STATUS BAR | Pos: {}, {} | Idx: {} | Scroll: {}".format(cursor_x, cursor_y, cursor_y + scroll_top, scroll_top)
             statusbarstr = ("'q' -> exit | STATUS BAR | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {}"
                             .format(cursor_x, cursor_y, str(len(self.full_index)), cursor_y + self.scroll_top, self.scroll_top, self.scroll_top_preview,
                                     self.highlight_positions[0], self.highlight_positions[1], self.highlight_positions[2], self.highlight_positions[3]))
-            # statusbarstr = f"'q' -> exit | 'c' -> changes | STATUS BAR | Pos: {cursor_x}, {cursor_y} | Idx: {cursor_y + scroll_top} | Scroll: {scroll_top}"
             if k == 0:
                 keystr = "No key press detected..."[:self.width-1]
 
@@ -326,6 +308,7 @@ class CursesDirlist:
             try:
                 self.draw_index(stdscr, cursor_y)
 
+                # Cursor in tree view, show initial display
                 if cursor_y >= 0:
                     # Draw Initial display
                     # Centering calculations
@@ -350,7 +333,9 @@ class CursesDirlist:
                     stdscr.addstr(start_y + 3, (self.width // 2) - 2, '-' * 4)
                     stdscr.addstr(start_y + 5, start_x_keystr, keystr)
 
+                # Cursor outside tree view, show preview display
                 else:
+                    # Print File Preview
                     prefix_len = len(str(len(self.preview_file_content))) + 2
                     prefix_len_2 = len(str(len(self.preview_file_content)))
                     stdscr.attron(curses.color_pair(1))
@@ -358,7 +343,7 @@ class CursesDirlist:
                     stdscr.addstr(1, self.max_chars + 10 + prefix_len, len("Preview file: " + self.preview_file_path) * "-")
                     stdscr.attroff(curses.color_pair(1))
 
-
+                    # todo: fix line longer than terminal width
                     y = 0
                     for idx, line in enumerate(self.preview_file_content):
                         if self.scroll_top_preview > idx:
@@ -372,7 +357,6 @@ class CursesDirlist:
                             stdscr.addstr(3 + y, self.max_chars + 10 + prefix_len, line)
                             stdscr.attroff(curses.A_REVERSE)
                             y = y + 1
-                    # stdscr.attroff(curses.color_pair(1))
 
 
                 if cursor_y >= 0:
@@ -390,11 +374,14 @@ class CursesDirlist:
 
     def main(self, ):
         curses.wrapper(self.draw_menu)
-    # self.dirlist_final = reload_dirlist(root_dir)
-    # print(self.dirlist_final)
-    # print(self.counter_files)
 
 
 if __name__ == "__main__":
-    app = CursesDirlist("/home/mgustran/01-development/app-ng-invoice/")
+    current_dir = os.getcwd()
+
+    if len(sys.argv) == 2:
+        current_dir = sys.argv[1]
+
+    # app = CursesDirlist("/home/mgustran/01-development/app-ng-invoice/")
+    app = CursesDirlist(current_dir)
     app.main()
