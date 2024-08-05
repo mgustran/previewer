@@ -1,5 +1,5 @@
 # Previewer
-Previewer is a basic linux terminal file browser written in python with curses. \
+Previewer is a terminal file browser written in python with curses. \
 It is meant to easily preview files, with a simple folder tree list as navigation system
 
 ![](https://github.com/mgustran/proxy-resources/blob/master/previewer-screenshot-2.png?raw=true)
@@ -13,6 +13,7 @@ It is meant to easily preview files, with a simple folder tree list as navigatio
 - Git changes list (similar to intellij) - TODO
 
 ### Requirements
+- Linux Terminal (I don't know if it works with Windows nor am I going to check it by now)
 - Python 3
 
 ### Installation - WIP
