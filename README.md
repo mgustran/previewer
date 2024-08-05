@@ -8,6 +8,7 @@ It is meant to easily preview files, with a simple folder tree list as navigatio
 - Jump to nano/vim/micro editors with special key
 - Highlight and copy with mouse and/or special keys - WIP
 - Configurable action keys - WIP
+- Git changes list (similar to intellij) - TODO
 
 ### Requirements
 - Python 3
