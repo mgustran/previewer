@@ -2,11 +2,13 @@
 Previewer is a basic linux terminal file browser written in python with curses. \
 It is meant to easily preview files, with a simple folder tree list as navigation system
 
+![](https://github.com/mgustran/proxy-resources/blob/master/previewer-screenshot-2.png?raw=true)
+
 ### Features
 - View Folder Tree
 - Preview file
-- Jump to nano/vim/micro editors with special key
-- Highlight and copy with mouse and/or special keys - WIP
+- Jump to vim / nano / micro editors with key B / N / M
+- Select and copy with mouse and/or special keys - WIP
 - Configurable action keys - WIP
 - Git changes list (similar to intellij) - TODO
 

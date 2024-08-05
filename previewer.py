@@ -1,3 +1,4 @@
+import locale
 import subprocess
 import os
 import curses
@@ -20,7 +21,7 @@ class suspend_curses():
         curses.doupdate()
 
 
-class CursesDirlist:
+class Previewer:
 
     counter_files = 0
     max_chars = 0
@@ -37,11 +38,11 @@ class CursesDirlist:
 
     highlight_positions = [-1, -1, -1, -1]
 
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, debug_statusbar=False):
         self.root_dir = root_dir  # instance variable unique to each instance
         self.root_dir = self.root_dir[:-1] if self.root_dir.endswith("/") else self.root_dir
         self.functions = PreviewerFunctions(self)
-
+        self.debug_statusbar = debug_statusbar
 
     def reload_dirlist(self, target_dir):
         dirlist = os.listdir(target_dir)
@@ -178,8 +179,12 @@ class CursesDirlist:
                     else:
                         self.preview_file_path = self.full_index[self.cursor_y + self.scroll_top]['file_path']
                         self.cursor_y = -1
-                        file1 = open(self.preview_file_path, 'r')
-                        self.preview_file_content = file1.readlines()
+                        try:
+                            file1 = open(self.preview_file_path, 'r')
+                            self.preview_file_content = file1.readlines()
+                        except Exception as e:
+                            # todo: log somewhere
+                            pass
 
             elif k == curses.KEY_LEFT:
 
@@ -302,9 +307,14 @@ class CursesDirlist:
             title = f"Previewer"[:self.width-1]
             subtitle = f"{subtitle_str}"[:self.width-1]
             keystr = "Last key pressed: {}".format(k)[:self.width-1]
-            statusbarstr = ("'q' -> exit | STATUS BAR | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {}"
-                            .format(self.cursor_x, self.cursor_y, str(len(self.full_index)), self.cursor_y + self.scroll_top, self.scroll_top, self.scroll_top_preview,
-                                    self.highlight_positions[0], self.highlight_positions[1], self.highlight_positions[2], self.highlight_positions[3]))
+
+            if self.debug_statusbar:
+                statusbarstr = ("'q' -> exit | STATUS BAR | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {}"
+                                .format(self.cursor_x, self.cursor_y, str(len(self.full_index)), self.cursor_y + self.scroll_top, self.scroll_top, self.scroll_top_preview,
+                                        self.highlight_positions[0], self.highlight_positions[1], self.highlight_positions[2], self.highlight_positions[3]))
+            else:
+                statusbarstr = f"'q' : exit | ← → ↑ ↓ | 'b/n/m' : open in vim/nano/micro"
+
             if k == 0:
                 keystr = "No key press detected..."[:self.width-1]
 
@@ -320,7 +330,6 @@ class CursesDirlist:
                 # todo: log error somewhere
                 # stdscr.addstr(self.height - 1, 0, str(e))
                 pass
-
             # Print Dir List
             try:
                 self.draw_index(stdscr)
@@ -397,9 +406,13 @@ class CursesDirlist:
 
 if __name__ == "__main__":
     current_dir = os.getcwd()
+    debug = False
 
     if len(sys.argv) == 2:
         current_dir = sys.argv[1]
 
-    app = CursesDirlist(current_dir)
+    if "--debug" in sys.argv:
+        debug = True
+
+    app = Previewer(current_dir, debug)
     app.main()
