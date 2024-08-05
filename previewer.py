@@ -86,7 +86,7 @@ class Previewer:
                 "is_dir": is_dir,
                 "file_path": os.path.join(target_dir, x),
                 "file_name": x,
-                "file_size": os.path.getsize(os.path.join(target_dir, x)) if not is_dir else 0,
+                # "file_size": os.path.getsize(os.path.join(target_dir, x)) if not is_dir else 0,
                 "level": os.path.join(target_dir, x).replace(self.root_dir, "").count("/") - 1,
                 "is_open": False,
             }
@@ -339,8 +339,8 @@ class Previewer:
             keystr = "Last key pressed: {}".format(k)[:self.width-1]
 
             if self.debug_statusbar:
-                statusbarstr = ("'q' -> exit | STATUS BAR | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {}"
-                                .format(self.cursor_x, self.cursor_y, str(len(self.full_index)), self.cursor_y + self.scroll_top, self.scroll_top, self.scroll_top_preview,
+                statusbarstr = ("Key: {} | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {}"
+                                .format(k, self.cursor_x, self.cursor_y, str(len(self.full_index)), self.cursor_y + self.scroll_top, self.scroll_top, self.scroll_top_preview,
                                         self.highlight_positions[0], self.highlight_positions[1], self.highlight_positions[2], self.highlight_positions[3]))
             else:
                 statusbarstr = f"'q' : exit | ← → ↑ ↓ | 'b/n/m' : open in vim/nano/micro"
@@ -386,8 +386,8 @@ class Previewer:
 
                     # Print rest of text
                     stdscr.addstr(start_y + 1, start_x_subtitle, subtitle)
-                    stdscr.addstr(start_y + 3, (self.width // 2) - 2, '-' * 4)
-                    stdscr.addstr(start_y + 5, start_x_keystr, keystr)
+                    stdscr.addstr(start_y + 2, (self.width // 2) - 2, '-' * 4)
+                    stdscr.addstr(start_y + 3, start_x_keystr, keystr)
 
                 # Cursor outside tree view, show preview display
                 else:
@@ -438,7 +438,7 @@ if __name__ == "__main__":
     current_dir = os.getcwd()
     debug = False
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) > 1:
         current_dir = sys.argv[1]
 
     if "--debug" in sys.argv:

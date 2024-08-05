@@ -16,12 +16,22 @@ It is meant to easily preview files, with a folder tree list as navigation syste
 - Linux Terminal (I don't know if it works with Windows nor am I going to check it by now)
 - Python 3
 
-### Installation - WIP
-`git clone https://github.com/mgustran/previewer.git`
+### Installation
+- Method 1 - Install script (recommended) :\
+`git clone https://github.com/mgustran/previewer.git` \
+`cd previewer` \
+`bash install.sh`
 
-### Usage - WIP
-- `python previewer.py` Opens current working dir
-- `python previewer.py <folder_path>` Opens dir passed as argument
+
+- Method 2 - Alias :\
+`git clone https://github.com/mgustran/previewer.git` \
+`cd previewer` \
+`echo "alias preview=\"python3 $(pwd)/previewer.py\"" >> ~/.bashrc` 
+
+### Usage
+- `preview` Opens current working dir
+- `preview <folder_path>` Opens dir passed as argument
+- `preview <folder_path> --debug ` Change statusbar by developer useful info
 
 \
 Thanks to Clay McLeod for an [excellent example](https://gist.github.com/claymcleod/b670285f334acd56ad1c) to start learning python curses
