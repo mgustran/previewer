@@ -172,7 +172,8 @@ class Previewer:
         curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLUE)
         curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
-        if curses.can_change_color():
+        invert_op = getattr(self, "has_extended_color_support", None)
+        if callable(invert_op) and curses.has_extended_color_support():
             curses.init_color(10, 400,   400,   900)  # Blue going to magenta
         else:
             curses.init_pair(4, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
