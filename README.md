@@ -6,14 +6,14 @@ It is meant to easily preview files, with a folder tree list as navigation syste
 
 ### Features
 - View Folder Tree
-- Preview file
-- Jump to vim / nano / micro editors with key B / N / M
+- Preview non-binary files
+- Jump to vim / nano / micro editors with key B / N / M - Will migrate to configurable actions
 - Select and copy with mouse and/or special keys - WIP
 - Configurable action keys - WIP
 - Git changes list (similar to intellij) - TODO
 
 ### Requirements
-- Linux Terminal (I don't know if it works with Windows nor am I going to check it by now)
+- Any Linux Terminal (I don't know if it works with Windows nor am I going to check it by now)
 - Python 3
 
 ### Installation
@@ -30,8 +30,8 @@ It is meant to easily preview files, with a folder tree list as navigation syste
 
 ### Usage
 - `preview` Opens current working dir
-- `preview <folder_path>` Opens dir passed as argument
-- `preview <folder_path> --debug ` Change statusbar by developer useful info
+- `preview <path>` Opens folder/file passed as argument
+- `... --debug ` Add developer useful info to statusbar
 
 \
 Thanks to Clay McLeod for an [excellent example](https://gist.github.com/claymcleod/b670285f334acd56ad1c) to start learning python curses

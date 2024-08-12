@@ -20,37 +20,6 @@ class suspend_curses():
         curses.doupdate()
 
 
-class PreviewerFunctions:
-
-    def __init__(self, root):
-        self.root = root
-
-    # def manage_input(self, key):
-
-    def key_down(self):
-        if self.root.cursor_y >= 0:
-            if self.root.cursor_y < self.root.height - 2 and self.root.cursor_y < len(self.root.full_index) - 1:
-                self.root.cursor_y = self.root.cursor_y + 1
-            else:
-                if len(self.root.full_index) - (self.root.scroll_top + 1 if self.root.scroll_top > 0 else 0) > (self.root.height - 2):
-                    self.root.scroll_top = self.root.scroll_top + 1
-        else:
-            if (self.root.scroll_top_preview + (self.root.height - 4)) > len(self.root.preview_file_content):
-                pass
-            else:
-                self.root.scroll_top_preview = self.root.scroll_top_preview + 1
-
-    def key_up(self):
-        if self.root.cursor_y >= 0:
-            if self.root.cursor_y > 0:
-                self.root.cursor_y = self.root.cursor_y - 1
-            else:
-                if self.root.scroll_top > 0:
-                    self.root.scroll_top = self.root.scroll_top - 1
-        else:
-            self.root.scroll_top_preview = (self.root.scroll_top_preview - 1) if self.root.scroll_top_preview > 0 else self.root.scroll_top_preview
-
-
 class Previewer:
 
     counter_files = 0
@@ -68,11 +37,33 @@ class Previewer:
 
     highlight_positions = [-1, -1, -1, -1]
 
-    def __init__(self, root_dir, debug_statusbar=False):
+    cursor_x = 0
+    cursor_y = 0
+
+    preview_file = False
+    initial_display = True
+
+    mouse_key_event_press = None
+
+    msg_window = None
+
+    def __init__(self, root_dir, target_file, debug_statusbar=False):
         self.root_dir = root_dir  # instance variable unique to each instance
         self.root_dir = self.root_dir[:-1] if self.root_dir.endswith("/") else self.root_dir
+        self.target_file = target_file
+        self.initial_display = target_file is not None
         self.functions = PreviewerFunctions(self)
         self.debug_statusbar = debug_statusbar
+
+    def init_colors(self):
+        # Start colors in curses
+        curses.start_color()
+
+        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLUE)
+        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(4, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+        curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
 
     def reload_dirlist(self, target_dir):
         dirlist = os.listdir(target_dir)
@@ -106,6 +97,30 @@ class Previewer:
 
     def draw_index(self, stdscr):
 
+        root_dirname = os.path.basename(self.root_dir)
+
+        stdscr.attron(curses.A_BOLD)
+        if self.cursor_y == -1:
+            stdscr.attron(curses.color_pair(2))
+
+        stdscr.addstr(0, 0, " .. ")
+        stdscr.attroff(curses.A_BOLD)
+        extra_chars = self.max_chars - len(" .. ")
+        stdscr.attron(curses.color_pair(4))
+        stdscr.addstr(0, len(" .. "), (" " * extra_chars) + "  |  |")
+        stdscr.attroff(curses.color_pair(4))
+        stdscr.attroff(curses.color_pair(2))
+
+        stdscr.attron(curses.color_pair(5))
+        stdscr.attron(curses.A_BOLD)
+        stdscr.addstr(1, 0, " " + root_dirname)
+        stdscr.attroff(curses.A_BOLD)
+        extra_chars = self.max_chars - (len(root_dirname) + 1)
+        stdscr.attron(curses.color_pair(4))
+        stdscr.addstr(1, len(root_dirname) + 1, (" " * extra_chars) + "  |  |")
+        stdscr.attroff(curses.color_pair(4))
+        stdscr.attroff(curses.color_pair(5))
+
         y = 0
 
         for idx, dir in enumerate(self.full_index):
@@ -113,7 +128,7 @@ class Previewer:
             if idx < self.scroll_top:
                 continue
 
-            if y > (self.height - 2):
+            if y > (self.height - 4):
                 continue
 
             extra_chars = 0
@@ -123,16 +138,26 @@ class Previewer:
                     stdscr.attron(curses.A_DIM)
                 dir["formatted_dirname"] = dir["formatted_dirname"].replace(" + " if dir["is_open"] else " - ", " - " if dir["is_open"] else " + ")
             if self.cursor_y == y:
-                stdscr.attron(curses.color_pair(2))
-                stdscr.addstr(y, 0, dir["formatted_dirname"])
+                if self.preview_file:
+                    stdscr.attron(curses.A_DIM)
+                    stdscr.attron(curses.color_pair(1))
+                else:
+                    stdscr.attron(curses.color_pair(2))
+                stdscr.addstr(y + 2, 0, dir["formatted_dirname"])
                 extra_chars = self.max_chars - len(dir["formatted_dirname"])
-                stdscr.addstr(y, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
+                stdscr.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
                 stdscr.attroff(curses.color_pair(2))
+                stdscr.attroff(curses.color_pair(1))
             else:
                 try:
-                    stdscr.addstr(y, 0, dir["formatted_dirname"])
+                    if dir["file_path"] == self.preview_file_path:
+                        stdscr.attron(curses.color_pair(1))
+                        stdscr.attron(curses.A_DIM)
+                    stdscr.addstr(y + 2, 0, dir["formatted_dirname"])
                     extra_chars = self.max_chars - len(dir["formatted_dirname"])
-                    stdscr.addstr(y, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
+                    stdscr.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
+                    stdscr.attron(curses.color_pair(1))
+                    stdscr.attron(curses.A_DIM)
                 except Exception as e:
                     # todo: log error somewhere
                     # print(e)
@@ -141,7 +166,7 @@ class Previewer:
             stdscr.attroff(curses.A_DIM)
 
             stdscr.attron(curses.color_pair(4))
-            stdscr.addstr(y, (len(dir["formatted_dirname"]) + len(" " * extra_chars) + 2), "|  |")
+            stdscr.addstr(y + 2, (len(dir["formatted_dirname"]) + len(" " * extra_chars) + 2), "|  |")
             stdscr.attroff(curses.color_pair(4))
 
             y = y + 1
@@ -150,7 +175,7 @@ class Previewer:
     def get_spaces_by_number(self, index, max_index):
         return max_index - len(str(index))
 
-    def draw_menu(self, stdscr):
+    def draw_main(self, stdscr):
         k = 0
         self.cursor_x = 0
         self.cursor_y = 0
@@ -165,20 +190,7 @@ class Previewer:
         # curses.mousemask(1)
         curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
 
-        # Start colors in curses
-        curses.start_color()
-
-        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLUE)
-        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
-
-        invert_op = getattr(self, "has_extended_color_support", None)
-        if callable(invert_op) and curses.has_extended_color_support():
-            curses.init_color(10, 400,   400,   900)  # Blue going to magenta
-        else:
-            curses.init_pair(4, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-
-        # curses.init_pair(4, 10, curses.COLOR_BLACK)
+        self.init_colors()
 
         self.dirlist_final = self.reload_dirlist(self.root_dir)
         self.full_index = self.dirlist_final.copy()
@@ -203,9 +215,9 @@ class Previewer:
 
             elif k == curses.KEY_RIGHT:
 
-                if self.cursor_y >= 0:
+                if not self.preview_file:
                     self.scroll_top_preview = 0
-                    subtitle_str = "Trying to open " + self.full_index[self.cursor_y + self.scroll_top]['file_path']
+                    # subtitle_str = "Trying to open " + self.full_index[self.cursor_y + self.scroll_top]['file_path']
                     if self.full_index[self.cursor_y + self.scroll_top]['is_dir']:
                         self.full_index[self.cursor_y + self.scroll_top]['is_open'] = True
                         dir_files = self.reload_dirlist(target_dir=self.full_index[self.cursor_y + self.scroll_top]['file_path'])
@@ -213,29 +225,31 @@ class Previewer:
                             self.full_index.insert(self.cursor_y + self.scroll_top + (idx + 1), file)
                         self.max_chars = len(max(self.full_index, key=lambda x: len(x["formatted_dirname"]))["formatted_dirname"])
                     else:
-                        self.preview_file_path = self.full_index[self.cursor_y + self.scroll_top]['file_path']
-                        self.cursor_y = -1
-                        try:
-                            file1 = open(self.preview_file_path, 'r')
-                            self.preview_file_content = file1.readlines()
-                        except Exception as e:
-                            # todo: log somewhere
-                            pass
+                        self.functions.open_file(self.full_index[self.cursor_y + self.scroll_top]['file_path'])
 
             elif k == curses.KEY_LEFT:
 
-                if self.cursor_y >= 0:
-                    subtitle_str = "Trying to close " + self.full_index[self.cursor_y + self.scroll_top]['file_path']
+                if not self.preview_file:
+                    # subtitle_str = "Trying to close " + self.full_index[self.cursor_y + self.scroll_top]['file_path']
                     if self.full_index[self.cursor_y + self.scroll_top]['is_dir']:
                         self.full_index[self.cursor_y + self.scroll_top]['is_open'] = False
                         self.full_index = [f for f in self.full_index if not f['file_path'].startswith(self.full_index[self.cursor_y + self.scroll_top]['file_path'] + '/')]
                     self.max_chars = len(max(self.full_index, key=lambda x: len(x["formatted_dirname"]))["formatted_dirname"])
                 else:
-                    if self.preview_file_path is not None:
-                        self.cursor_y = [idx for idx, f in enumerate(self.full_index) if f['file_path'] == self.preview_file_path][0] - self.scroll_top
-                    else:
-                        self.cursor_y = 0
-                    self.preview_file_path = None
+                    self.preview_file = False
+                    # self.preview_file_path = None
+
+            elif k == 10:
+
+                # subtitle_str = "Trying to reverse path from " + self.root_dir
+                if not self.preview_file and self.cursor_y == -1 and self.root_dir != '/':
+                    # subtitle_str = "Trying to reverse path from " + self.root_dir
+                    self.root_dir = self.root_dir[0:self.root_dir.rfind('/')] if self.root_dir.rfind('/') != 0 else '/'
+                    self.dirlist_final = self.reload_dirlist(self.root_dir)
+                    self.full_index = self.dirlist_final.copy()
+                    self.max_chars = len(max(self.full_index, key=lambda x: len(x["formatted_dirname"]))["formatted_dirname"])
+                else:
+                    pass
 
             elif k == curses.KEY_BACKSPACE:
 
@@ -254,7 +268,7 @@ class Previewer:
 
                 isdir = False
                 dir1 = None
-                if self.cursor_y >= 0:
+                if not self.preview_file:
                     isdir = self.full_index[self.cursor_y + self.scroll_top]['is_dir']
                     dir1 = self.full_index[self.cursor_y + self.scroll_top]['file_path']
                 else:
@@ -269,7 +283,7 @@ class Previewer:
 
                 isdir = False
                 dir1 = None
-                if self.cursor_y >= 0:
+                if not self.preview_file:
                     isdir = self.full_index[self.cursor_y + self.scroll_top]['is_dir']
                     dir1 = self.full_index[self.cursor_y + self.scroll_top]['file_path']
                 else:
@@ -284,7 +298,7 @@ class Previewer:
 
                 isdir = False
                 dir1 = None
-                if self.cursor_y >= 0:
+                if not self.preview_file:
                     isdir = self.full_index[self.cursor_y + self.scroll_top]['is_dir']
                     dir1 = self.full_index[self.cursor_y + self.scroll_top]['file_path']
                 else:
@@ -293,19 +307,24 @@ class Previewer:
                 if not isdir:
 
                     with suspend_curses():
-                        # subprocess.call(["guake", "--split-vertical", "-e", f"micro {dir1}"])
                         subprocess.call(["micro", f"{dir1}"])
 
             # todo: Redo with mouse event type
-            # elif k == 104:  # H / Highlight
-            #
-            #     if self.cursor_y == -1:
-            #
-            #         self.highlight_positions[0] = curses.getmouse()[2]
+            elif k == 104:  # H / Help
+
+                if self.msg_window is None:
+                    self.msg_window = curses.newwin(7, 20, 10, 10)
+                    self.msg_window.attron(curses.color_pair(5))
+                    self.msg_window.addstr(0, 0, "PATACAS")
+                    self.msg_window.attroff(curses.color_pair(5))
+                    # self.init_colors()
+                else:
+                    self.msg_window.erase()
+                    self.msg_window = None
 
             elif k == curses.KEY_MOUSE:
                 try:
-                    mouse_key_event_press = None
+                    self.mouse_key_event_press = None
                     mouse_event = curses.getmouse()
 
                     # add scroll function type
@@ -319,16 +338,20 @@ class Previewer:
                     else:
                         if self.preview_file_path is not None:
                             if mouse_event[4] == 2:
-                                mouse_key_event_press = True
+                                self.mouse_key_event_press = True
                             elif mouse_event[4] == 1:
-                                mouse_key_event_press = False
+                                self.mouse_key_event_press = False
                             elif mouse_event[4] == 4:
                                 self.highlight_positions = [-1, -1, -1, -1]
 
-                            if mouse_key_event_press is not None:
+                            if self.mouse_key_event_press is not None:
                                 prefix_len = len(str(len(self.preview_file_content))) + 2
-                                self.highlight_positions[0 if mouse_key_event_press else 2] = mouse_event[1] - (self.max_chars + 10 + prefix_len)
-                                self.highlight_positions[1 if mouse_key_event_press else 3] = mouse_event[2] - 3 + self.scroll_top_preview
+                                # original
+                                # self.highlight_positions[0 if mouse_key_event_press else 2] = mouse_event[1] - (self.max_chars + 10 + prefix_len)
+                                # self.highlight_positions[1 if mouse_key_event_press else 3] = mouse_event[2] - 3 + self.scroll_top_preview
+
+                                self.highlight_positions[0 if self.mouse_key_event_press else 2] = mouse_event[1]
+                                self.highlight_positions[1 if self.mouse_key_event_press else 3] = mouse_event[2]
 
                         else:
                             # stdscr.addstr(0, 50, str(mouse_event))
@@ -344,12 +367,14 @@ class Previewer:
             subtitle = f"{subtitle_str}"[:self.width-1]
             keystr = "Last key pressed: {}".format(k)[:self.width-1]
 
+            statusbarstr = f"'q' : exit | ← → ↑ ↓ | 'b/n/m' : open in vim/nano/micro"
+
             if self.debug_statusbar:
-                statusbarstr = ("Key: {} | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {}"
+                statusbarstr = statusbarstr + (" " * 30) + ("Key: {} | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {} | Colors: {}"
                                 .format(k, self.cursor_x, self.cursor_y, str(len(self.full_index)), self.cursor_y + self.scroll_top, self.scroll_top, self.scroll_top_preview,
-                                        self.highlight_positions[0], self.highlight_positions[1], self.highlight_positions[2], self.highlight_positions[3]))
-            else:
-                statusbarstr = f"'q' : exit | ← → ↑ ↓ | 'b/n/m' : open in vim/nano/micro"
+                                        self.highlight_positions[0], self.highlight_positions[1], self.highlight_positions[2], self.highlight_positions[3], curses.COLORS))
+            # else:
+            #     statusbarstr = f"'q' : exit | ← → ↑ ↓ | 'b/n/m' : open in vim/nano/micro"
 
             if k == 0:
                 keystr = "No key press detected..."[:self.width-1]
@@ -368,10 +393,19 @@ class Previewer:
                 pass
             # Print Dir List
             try:
+
+                if self.target_file is not None:
+                    self.functions.open_file(self.target_file)
+                    self.preview_file = True
+                    menu_index = next((idx for idx, x in enumerate(self.full_index) if x['file_path'] == (self.root_dir + '/' + self.target_file)), None)
+                    if menu_index is not None:
+                        self.cursor_y = menu_index
+                    self.target_file = None
+
                 self.draw_index(stdscr)
 
                 # Cursor in tree view, show initial display
-                if self.cursor_y >= 0:
+                if self.initial_display:
                     # Draw Initial display
                     # Centering calculations
                     start_x_title = int((self.width // 2) - (len(title) // 2) - len(title) % 2)
@@ -392,17 +426,22 @@ class Previewer:
 
                     # Print rest of text
                     stdscr.addstr(start_y + 1, start_x_subtitle, subtitle)
-                    stdscr.addstr(start_y + 2, (self.width // 2) - 2, '-' * 4)
-                    stdscr.addstr(start_y + 3, start_x_keystr, keystr)
+                    # stdscr.addstr(start_y + 2, (self.width // 2) - 2, '-' * 4)
+                    # stdscr.addstr(start_y + 3, start_x_keystr, keystr)
 
                 # Cursor outside tree view, show preview display
                 else:
                     # Print File Preview
                     prefix_len = len(str(len(self.preview_file_content))) + 2
                     prefix_len_2 = len(str(len(self.preview_file_content)))
+                    filename = self.preview_file_path.replace(self.root_dir, '')
+                    filename = filename[1:] if filename.startswith('/') else filename
                     stdscr.attron(curses.color_pair(1))
-                    stdscr.addstr(0, self.max_chars + 10 + prefix_len, "Preview file: " + self.preview_file_path)
-                    stdscr.addstr(1, self.max_chars + 10 + prefix_len, len("Preview file: " + self.preview_file_path) * "-")
+                    stdscr.addstr(0, self.max_chars + 10 + prefix_len, "Preview file: ")
+                    stdscr.attron(curses.A_BOLD)
+                    stdscr.addstr(0, self.max_chars + 10 + prefix_len + len("Preview file: "), filename)
+                    stdscr.attroff(curses.A_BOLD)
+                    stdscr.addstr(1, self.max_chars + 10 + prefix_len, len("Preview file: " + filename) * "-")
                     stdscr.attroff(curses.color_pair(1))
 
                     # todo: fix line longer than terminal width
@@ -414,41 +453,111 @@ class Previewer:
                             stdscr.attron(curses.color_pair(1))
                             stdscr.addstr(3 + y, self.max_chars + 8, " " * self.get_spaces_by_number(idx + 1, prefix_len_2) + str(idx + 1) + " |")
                             stdscr.attroff(curses.color_pair(1))
-                            # if highlight_positions[] == y:
-                            #     stdscr.attron(curses.A_REVERSE)
                             stdscr.addstr(3 + y, self.max_chars + 10 + prefix_len, line)
                             stdscr.attroff(curses.A_REVERSE)
                             y = y + 1
 
+                    if self.mouse_key_event_press is False:
+                        stdscr.chgat(self.highlight_positions[1], self.highlight_positions[0], 10, curses.A_REVERSE)
 
-                if self.cursor_y >= 0:
+
+                if not self.preview_file:
                     stdscr.move(self.cursor_y, self.cursor_x)
 
 
             except Exception as e:
+                print(e)
                 # todo: log error somewhere
                 pass
 
             # Refresh the screen
             stdscr.refresh()
 
+            if self.msg_window is not None:
+                self.msg_window.refresh()
+
             # Wait for next input
             k = stdscr.getch()
 
 
     def main(self, ):
-        curses.wrapper(self.draw_menu)
+        curses.wrapper(self.draw_main)
+
+
+class PreviewerFunctions:
+
+    def __init__(self, root: Previewer):
+        self.root = root
+
+    def key_down(self):
+        if not self.root.preview_file:
+            if self.root.cursor_y < self.root.height - 4:
+                if self.root.cursor_y < len(self.root.full_index) - 1:
+                    self.root.cursor_y = self.root.cursor_y + 1
+            else:
+                if len(self.root.full_index) - (self.root.scroll_top + 1 if self.root.scroll_top > 0 else 0) > (self.root.height - 4):
+                    self.root.scroll_top = self.root.scroll_top + 1
+        else:
+            if (self.root.scroll_top_preview + (self.root.height - 4)) > len(self.root.preview_file_content):
+                pass
+            else:
+                self.root.scroll_top_preview = self.root.scroll_top_preview + 1
+
+    def key_up(self):
+        if not self.root.preview_file:
+            if self.root.cursor_y > 0:
+                self.root.cursor_y = self.root.cursor_y - 1
+            else:
+                if self.root.scroll_top > 0:
+                    self.root.scroll_top = self.root.scroll_top - 1
+                elif self.root.cursor_y == 0:
+                    self.root.cursor_y = -1
+        else:
+            self.root.scroll_top_preview = (self.root.scroll_top_preview - 1) if self.root.scroll_top_preview > 0 else self.root.scroll_top_preview
+
+    def open_file(self, target):
+        self.root.preview_file_path = target
+        self.root.preview_file = True
+        self.root.initial_display = False
+        try:
+            file1 = open(self.root.preview_file_path, 'r')
+            self.root.preview_file_content = file1.readlines()
+        except Exception as e:
+            # todo: log somewhere
+            pass
 
 
 if __name__ == "__main__":
     current_dir = os.getcwd()
+    target_file = None
     debug = False
 
-    if len(sys.argv) > 1:
-        current_dir = sys.argv[1]
+    args = sys.argv
 
-    if "--debug" in sys.argv:
+    if "--debug" in args:
         debug = True
+        args.remove("--debug")
 
-    app = Previewer(current_dir, debug)
+    if len(args) > 1:
+        current_dir = args[1]
+
+        is_absolute = current_dir.startswith('/')
+
+        if not is_absolute:
+            if current_dir.startswith('~'):
+                current_dir = os.path.expanduser(current_dir)
+            elif current_dir.startswith("./"):
+                current_dir = current_dir[2:]
+            else:
+                current_dir = os.path.abspath(current_dir)
+
+        if not os.path.isdir(current_dir):
+            target_file = current_dir[current_dir.rfind("/") + 1:]
+            current_dir = current_dir[:current_dir.rfind("/")]
+
+        if not os.path.exists(current_dir):
+            print("Invalid directory: " + current_dir, file=sys.stderr)
+            current_dir = os.getcwd()
+
+    app = Previewer(current_dir, target_file, debug)
     app.main()
