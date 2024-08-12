@@ -167,11 +167,16 @@ class Previewer:
 
         # Start colors in curses
         curses.start_color()
-        # curses.init_color(10, 400,   400,   900)  # Blue going to magenta
+
         curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLUE)
         curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
-        curses.init_pair(4, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+
+        if curses.has_extended_color_support():
+            curses.init_color(10, 400,   400,   900)  # Blue going to magenta
+        else:
+            curses.init_pair(4, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+
         # curses.init_pair(4, 10, curses.COLOR_BLACK)
 
         self.dirlist_final = self.reload_dirlist(self.root_dir)
