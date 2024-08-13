@@ -20,6 +20,18 @@ class suspend_curses():
         curses.doupdate()
 
 
+def init_colors():
+    # Start colors in curses
+    curses.start_color()
+
+    curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLUE)
+    curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
+    curses.init_pair(4, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+    curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
+    curses.init_pair(6, curses.COLOR_WHITE, curses.COLOR_BLACK)
+
+
 class Previewer:
 
     counter_files = 0
@@ -47,23 +59,16 @@ class Previewer:
 
     msg_window = None
 
-    def __init__(self, root_dir, target_file, debug_statusbar=False):
+    tree_window = None
+    preview_window = None
+
+    def __init__(self, root_dir, file_target, debug_statusbar=False):
         self.root_dir = root_dir  # instance variable unique to each instance
         self.root_dir = self.root_dir[:-1] if self.root_dir.endswith("/") else self.root_dir
-        self.target_file = target_file
-        self.initial_display = target_file is not None
+        self.target_file = file_target
+        self.initial_display = file_target is not None
         self.functions = PreviewerFunctions(self)
         self.debug_statusbar = debug_statusbar
-
-    def init_colors(self):
-        # Start colors in curses
-        curses.start_color()
-
-        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLUE)
-        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
-        curses.init_pair(4, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-        curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
 
     def reload_dirlist(self, target_dir):
         dirlist = os.listdir(target_dir)
@@ -95,31 +100,28 @@ class Previewer:
         return sublist1 + sublist2
 
 
-    def draw_index(self, stdscr):
+    def draw_file_tree(self):
 
         root_dirname = os.path.basename(self.root_dir)
 
-        stdscr.attron(curses.A_BOLD)
+        self.tree_window.attron(curses.A_BOLD)
         if self.cursor_y == -1:
-            stdscr.attron(curses.color_pair(2))
+            self.tree_window.attron(curses.color_pair(2))
 
-        stdscr.addstr(0, 0, " .. ")
-        stdscr.attroff(curses.A_BOLD)
+        self.tree_window.addstr(0, 0, " .. ")
+        self.tree_window.attroff(curses.A_BOLD)
         extra_chars = self.max_chars - len(" .. ")
-        stdscr.attron(curses.color_pair(4))
-        stdscr.addstr(0, len(" .. "), (" " * extra_chars) + "  |  |")
-        stdscr.attroff(curses.color_pair(4))
-        stdscr.attroff(curses.color_pair(2))
+        self.tree_window.attron(curses.color_pair(4))
+        self.tree_window.addstr(0, len(" .. "), (" " * extra_chars) + "  ||")
+        self.tree_window.attroff(curses.color_pair(4))
+        self.tree_window.attroff(curses.color_pair(2))
 
-        stdscr.attron(curses.color_pair(5))
-        stdscr.attron(curses.A_BOLD)
-        stdscr.addstr(1, 0, " " + root_dirname)
-        stdscr.attroff(curses.A_BOLD)
+        self.tree_window.attron(curses.color_pair(5))
+        self.tree_window.attron(curses.A_BOLD)
+        self.tree_window.addstr(1, 0, " " + root_dirname)
+        self.tree_window.attroff(curses.A_BOLD)
         extra_chars = self.max_chars - (len(root_dirname) + 1)
-        stdscr.attron(curses.color_pair(4))
-        stdscr.addstr(1, len(root_dirname) + 1, (" " * extra_chars) + "  |  |")
-        stdscr.attroff(curses.color_pair(4))
-        stdscr.attroff(curses.color_pair(5))
+        self.tree_window.attroff(curses.color_pair(5))
 
         y = 0
 
@@ -133,47 +135,51 @@ class Previewer:
 
             extra_chars = 0
             if dir["is_dir"]:
-                stdscr.attron(curses.A_BOLD)
+                self.tree_window.attron(curses.A_BOLD)
                 if dir["file_name"].startswith("."):
-                    stdscr.attron(curses.A_DIM)
+                    self.tree_window.attron(curses.A_DIM)
                 dir["formatted_dirname"] = dir["formatted_dirname"].replace(" + " if dir["is_open"] else " - ", " - " if dir["is_open"] else " + ")
             if self.cursor_y == y:
                 if self.preview_file:
-                    stdscr.attron(curses.A_DIM)
-                    stdscr.attron(curses.color_pair(1))
+                    self.tree_window.attron(curses.A_DIM)
+                    self.tree_window.attron(curses.color_pair(1))
                 else:
-                    stdscr.attron(curses.color_pair(2))
-                stdscr.addstr(y + 2, 0, dir["formatted_dirname"])
+                    self.tree_window.attron(curses.color_pair(2))
+                self.tree_window.addstr(y + 2, 0, dir["formatted_dirname"])
                 extra_chars = self.max_chars - len(dir["formatted_dirname"])
-                stdscr.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
-                stdscr.attroff(curses.color_pair(2))
-                stdscr.attroff(curses.color_pair(1))
+                self.tree_window.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
+                self.tree_window.attroff(curses.color_pair(2))
+                self.tree_window.attroff(curses.color_pair(1))
             else:
                 try:
                     if dir["file_path"] == self.preview_file_path:
-                        stdscr.attron(curses.color_pair(1))
-                        stdscr.attron(curses.A_DIM)
-                    stdscr.addstr(y + 2, 0, dir["formatted_dirname"])
+                        self.tree_window.attron(curses.color_pair(1))
+                        self.tree_window.attron(curses.A_DIM)
+                    else:
+                        self.tree_window.attron(curses.color_pair(6))
+                    self.tree_window.addstr(y + 2, 0, dir["formatted_dirname"])
                     extra_chars = self.max_chars - len(dir["formatted_dirname"])
-                    stdscr.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
-                    stdscr.attron(curses.color_pair(1))
-                    stdscr.attron(curses.A_DIM)
+                    self.tree_window.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
+                    self.tree_window.attron(curses.color_pair(1))
+                    self.tree_window.attron(curses.color_pair(6))
+                    self.tree_window.attron(curses.A_DIM)
                 except Exception as e:
                     # todo: log error somewhere
                     # print(e)
                     pass
-            stdscr.attroff(curses.A_BOLD)
-            stdscr.attroff(curses.A_DIM)
-
-            stdscr.attron(curses.color_pair(4))
-            stdscr.addstr(y + 2, (len(dir["formatted_dirname"]) + len(" " * extra_chars) + 2), "|  |")
-            stdscr.attroff(curses.color_pair(4))
+            self.tree_window.attroff(curses.A_BOLD)
+            self.tree_window.attroff(curses.A_DIM)
 
             y = y + 1
 
 
     def get_spaces_by_number(self, index, max_index):
         return max_index - len(str(index))
+
+    def resize_windows(self):
+        self.tree_window.resize(self.height - 1, self.max_chars + 2)
+        self.preview_window.resize(self.height - 1, self.width - (self.max_chars + 4))
+        self.preview_window.mvwin(0, self.max_chars + 4)
 
     def draw_main(self, stdscr):
         k = 0
@@ -190,11 +196,17 @@ class Previewer:
         # curses.mousemask(1)
         curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
 
-        self.init_colors()
+        init_colors()
 
         self.dirlist_final = self.reload_dirlist(self.root_dir)
         self.full_index = self.dirlist_final.copy()
         self.max_chars = len(max(self.full_index, key=lambda x: len(x["formatted_dirname"]))["formatted_dirname"])
+
+        self.height, self.width = stdscr.getmaxyx()
+        self.tree_window = curses.newwin(self.height - 1, self.max_chars + 2, 0, 0)
+        self.preview_window = curses.newwin(self.height - 1, self.width - (self.max_chars + 4), 0, (self.max_chars + 4))
+
+        # self.tree_window.bkgd(' ', curses.color_pair(3))
 
         subtitle_str = "Written by mgustran"
 
@@ -203,6 +215,8 @@ class Previewer:
 
             # Initialization
             stdscr.clear()
+            self.tree_window.clear()
+            self.preview_window.clear()
             self.height, self.width = stdscr.getmaxyx()
 
             if k == curses.KEY_DOWN:
@@ -314,6 +328,8 @@ class Previewer:
 
                 if self.msg_window is None:
                     self.msg_window = curses.newwin(7, 20, 10, 10)
+                    self.msg_window.bkgd(' ', curses.color_pair(2))
+                    # self.msg_window.
                     self.msg_window.attron(curses.color_pair(5))
                     self.msg_window.addstr(0, 0, "PATACAS")
                     self.msg_window.attroff(curses.color_pair(5))
@@ -394,15 +410,22 @@ class Previewer:
             # Print Dir List
             try:
 
+                # Resize Windows
+                self.resize_windows()
+
+                # Draw Separator
+                for y in range(0, self.height - 1):
+                    stdscr.addstr(y, self.max_chars + 2, "||")
+
                 if self.target_file is not None:
                     self.functions.open_file(self.target_file)
-                    self.preview_file = True
                     menu_index = next((idx for idx, x in enumerate(self.full_index) if x['file_path'] == (self.root_dir + '/' + self.target_file)), None)
                     if menu_index is not None:
                         self.cursor_y = menu_index
                     self.target_file = None
 
-                self.draw_index(stdscr)
+                # Draw File Tree
+                self.draw_file_tree()
 
                 # Cursor in tree view, show initial display
                 if self.initial_display:
@@ -414,18 +437,18 @@ class Previewer:
                     start_y = int((self.height // 2) - 2)
 
                     # Turning on attributes for title
-                    stdscr.attron(curses.color_pair(2))
-                    stdscr.attron(curses.A_BOLD)
+                    self.preview_window.attron(curses.color_pair(2))
+                    self.preview_window.attron(curses.A_BOLD)
 
                     # Rendering title
-                    stdscr.addstr(start_y, start_x_title, title)
+                    self.preview_window.addstr(start_y, start_x_title, title)
 
                     # Turning off attributes for title
-                    stdscr.attroff(curses.color_pair(2))
-                    stdscr.attroff(curses.A_BOLD)
+                    self.preview_window.attroff(curses.color_pair(2))
+                    self.preview_window.attroff(curses.A_BOLD)
 
                     # Print rest of text
-                    stdscr.addstr(start_y + 1, start_x_subtitle, subtitle)
+                    self.preview_window.addstr(start_y + 1, start_x_subtitle, subtitle)
                     # stdscr.addstr(start_y + 2, (self.width // 2) - 2, '-' * 4)
                     # stdscr.addstr(start_y + 3, start_x_keystr, keystr)
 
@@ -436,13 +459,13 @@ class Previewer:
                     prefix_len_2 = len(str(len(self.preview_file_content)))
                     filename = self.preview_file_path.replace(self.root_dir, '')
                     filename = filename[1:] if filename.startswith('/') else filename
-                    stdscr.attron(curses.color_pair(1))
-                    stdscr.addstr(0, self.max_chars + 10 + prefix_len, "Preview file: ")
-                    stdscr.attron(curses.A_BOLD)
-                    stdscr.addstr(0, self.max_chars + 10 + prefix_len + len("Preview file: "), filename)
-                    stdscr.attroff(curses.A_BOLD)
-                    stdscr.addstr(1, self.max_chars + 10 + prefix_len, len("Preview file: " + filename) * "-")
-                    stdscr.attroff(curses.color_pair(1))
+                    self.preview_window.attron(curses.color_pair(1))
+                    self.preview_window.addstr(0, 3 + prefix_len, "Preview file: ")
+                    self.preview_window.attron(curses.A_BOLD)
+                    self.preview_window.addstr(0, 3 + prefix_len + len("Preview file: "), filename)
+                    self.preview_window.attroff(curses.A_BOLD)
+                    self.preview_window.addstr(1, 3 + prefix_len, len("Preview file: " + filename) * "-")
+                    self.preview_window.attroff(curses.color_pair(1))
 
                     # todo: fix line longer than terminal width
                     y = 0
@@ -450,19 +473,19 @@ class Previewer:
                         if self.scroll_top_preview > idx:
                             continue
                         if y <= self.height - 5:
-                            stdscr.attron(curses.color_pair(1))
-                            stdscr.addstr(3 + y, self.max_chars + 8, " " * self.get_spaces_by_number(idx + 1, prefix_len_2) + str(idx + 1) + " |")
-                            stdscr.attroff(curses.color_pair(1))
-                            stdscr.addstr(3 + y, self.max_chars + 10 + prefix_len, line)
-                            stdscr.attroff(curses.A_REVERSE)
+                            self.preview_window.attron(curses.color_pair(1))
+                            self.preview_window.addstr(3 + y, 1, " " * self.get_spaces_by_number(idx + 1, prefix_len_2) + str(idx + 1) + " |")
+                            self.preview_window.attroff(curses.color_pair(1))
+                            self.preview_window.addstr(3 + y, 3 + prefix_len, line)
+                            self.preview_window.attroff(curses.A_REVERSE)
                             y = y + 1
 
                     if self.mouse_key_event_press is False:
-                        stdscr.chgat(self.highlight_positions[1], self.highlight_positions[0], 10, curses.A_REVERSE)
+                        self.preview_window.chgat(self.highlight_positions[1], self.highlight_positions[0], 10, curses.A_REVERSE)
 
 
                 if not self.preview_file:
-                    stdscr.move(self.cursor_y, self.cursor_x)
+                    self.preview_window.move(self.cursor_y, self.cursor_x)
 
 
             except Exception as e:
@@ -475,6 +498,12 @@ class Previewer:
 
             if self.msg_window is not None:
                 self.msg_window.refresh()
+
+            if self.tree_window is not None:
+                self.tree_window.refresh()
+
+            if self.preview_window is not None:
+                self.preview_window.refresh()
 
             # Wait for next input
             k = stdscr.getch()
