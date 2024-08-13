@@ -52,7 +52,7 @@ class Previewer:
     cursor_x = 0
     cursor_y = 0
 
-    preview_file = False
+    focus_on_preview = False
     initial_display = True
 
     mouse_key_event_press = None
@@ -140,7 +140,7 @@ class Previewer:
                     self.tree_window.attron(curses.A_DIM)
                 dir["formatted_dirname"] = dir["formatted_dirname"].replace(" + " if dir["is_open"] else " - ", " - " if dir["is_open"] else " + ")
             if self.cursor_y == y:
-                if self.preview_file:
+                if self.focus_on_preview:
                     self.tree_window.attron(curses.A_DIM)
                     self.tree_window.attron(curses.color_pair(1))
                 else:
@@ -229,7 +229,7 @@ class Previewer:
 
             elif k == curses.KEY_RIGHT:
 
-                if not self.preview_file:
+                if not self.focus_on_preview:
                     self.scroll_top_preview = 0
                     # subtitle_str = "Trying to open " + self.full_index[self.cursor_y + self.scroll_top]['file_path']
                     if self.full_index[self.cursor_y + self.scroll_top]['is_dir']:
@@ -243,20 +243,20 @@ class Previewer:
 
             elif k == curses.KEY_LEFT:
 
-                if not self.preview_file:
+                if not self.focus_on_preview:
                     # subtitle_str = "Trying to close " + self.full_index[self.cursor_y + self.scroll_top]['file_path']
                     if self.full_index[self.cursor_y + self.scroll_top]['is_dir']:
                         self.full_index[self.cursor_y + self.scroll_top]['is_open'] = False
                         self.full_index = [f for f in self.full_index if not f['file_path'].startswith(self.full_index[self.cursor_y + self.scroll_top]['file_path'] + '/')]
                     self.max_chars = len(max(self.full_index, key=lambda x: len(x["formatted_dirname"]))["formatted_dirname"])
                 else:
-                    self.preview_file = False
+                    self.focus_on_preview = False
                     # self.preview_file_path = None
 
             elif k == 10:
 
                 # subtitle_str = "Trying to reverse path from " + self.root_dir
-                if not self.preview_file and self.cursor_y == -1 and self.root_dir != '/':
+                if not self.focus_on_preview and self.cursor_y == -1 and self.root_dir != '/':
                     # subtitle_str = "Trying to reverse path from " + self.root_dir
                     self.root_dir = self.root_dir[0:self.root_dir.rfind('/')] if self.root_dir.rfind('/') != 0 else '/'
                     self.dirlist_final = self.reload_dirlist(self.root_dir)
@@ -282,7 +282,7 @@ class Previewer:
 
                 isdir = False
                 dir1 = None
-                if not self.preview_file:
+                if not self.focus_on_preview:
                     isdir = self.full_index[self.cursor_y + self.scroll_top]['is_dir']
                     dir1 = self.full_index[self.cursor_y + self.scroll_top]['file_path']
                 else:
@@ -297,7 +297,7 @@ class Previewer:
 
                 isdir = False
                 dir1 = None
-                if not self.preview_file:
+                if not self.focus_on_preview:
                     isdir = self.full_index[self.cursor_y + self.scroll_top]['is_dir']
                     dir1 = self.full_index[self.cursor_y + self.scroll_top]['file_path']
                 else:
@@ -312,7 +312,7 @@ class Previewer:
 
                 isdir = False
                 dir1 = None
-                if not self.preview_file:
+                if not self.focus_on_preview:
                     isdir = self.full_index[self.cursor_y + self.scroll_top]['is_dir']
                     dir1 = self.full_index[self.cursor_y + self.scroll_top]['file_path']
                 else:
@@ -419,7 +419,7 @@ class Previewer:
 
                 if self.target_file is not None:
                     self.functions.open_file(self.target_file)
-                    menu_index = next((idx for idx, x in enumerate(self.full_index) if x['file_path'] == (self.root_dir + '/' + self.target_file)), None)
+                    menu_index = next((idx for idx, x in enumerate(self.full_index) if x['file_path'] == self.target_file), None)
                     if menu_index is not None:
                         self.cursor_y = menu_index
                     self.target_file = None
@@ -484,7 +484,7 @@ class Previewer:
                         self.preview_window.chgat(self.highlight_positions[1], self.highlight_positions[0], 10, curses.A_REVERSE)
 
 
-                if not self.preview_file:
+                if not self.focus_on_preview:
                     self.preview_window.move(self.cursor_y, self.cursor_x)
 
 
@@ -519,7 +519,7 @@ class PreviewerFunctions:
         self.root = root
 
     def key_down(self):
-        if not self.root.preview_file:
+        if not self.root.focus_on_preview:
             if self.root.cursor_y < self.root.height - 4:
                 if self.root.cursor_y < len(self.root.full_index) - 1:
                     self.root.cursor_y = self.root.cursor_y + 1
@@ -533,7 +533,7 @@ class PreviewerFunctions:
                 self.root.scroll_top_preview = self.root.scroll_top_preview + 1
 
     def key_up(self):
-        if not self.root.preview_file:
+        if not self.root.focus_on_preview:
             if self.root.cursor_y > 0:
                 self.root.cursor_y = self.root.cursor_y - 1
             else:
@@ -546,7 +546,7 @@ class PreviewerFunctions:
 
     def open_file(self, target):
         self.root.preview_file_path = target
-        self.root.preview_file = True
+        self.root.focus_on_preview = True
         self.root.initial_display = False
         try:
             file1 = open(self.root.preview_file_path, 'r')
@@ -581,7 +581,7 @@ if __name__ == "__main__":
                 current_dir = os.path.abspath(current_dir)
 
         if not os.path.isdir(current_dir):
-            target_file = current_dir[current_dir.rfind("/") + 1:]
+            target_file = current_dir
             current_dir = current_dir[:current_dir.rfind("/")]
 
         if not os.path.exists(current_dir):
