@@ -102,7 +102,7 @@ class Previewer:
 
     def draw_file_tree(self):
 
-        root_dirname = os.path.basename(self.root_dir)
+        root_dirname = os.path.basename(self.root_dir) if self.root_dir != '/' else '/'
 
         self.tree_window.attron(curses.A_BOLD)
         if self.cursor_y == -1:
@@ -111,9 +111,9 @@ class Previewer:
         self.tree_window.addstr(0, 0, " .. ")
         self.tree_window.attroff(curses.A_BOLD)
         extra_chars = self.max_chars - len(" .. ")
-        self.tree_window.attron(curses.color_pair(4))
-        self.tree_window.addstr(0, len(" .. "), (" " * extra_chars) + "  ||")
-        self.tree_window.attroff(curses.color_pair(4))
+        # self.tree_window.attron(curses.color_pair(4))
+        # self.tree_window.addstr(0, len(" .. "), (" " * extra_chars) + "  ||")
+        # self.tree_window.attroff(curses.color_pair(4))
         self.tree_window.attroff(curses.color_pair(2))
 
         self.tree_window.attron(curses.color_pair(5))
@@ -253,12 +253,13 @@ class Previewer:
                     self.focus_on_preview = False
                     # self.preview_file_path = None
 
-            elif k == 10:
+            elif k == 10:  # ENTER
 
                 # subtitle_str = "Trying to reverse path from " + self.root_dir
                 if not self.focus_on_preview and self.cursor_y == -1 and self.root_dir != '/':
                     # subtitle_str = "Trying to reverse path from " + self.root_dir
                     self.root_dir = self.root_dir[0:self.root_dir.rfind('/')] if self.root_dir.rfind('/') != 0 else '/'
+                    # if self.root_dir.rfind('/') != 0 or len(self.root_dir) > 0 and self.root_dir.startswith("/"):
                     self.dirlist_final = self.reload_dirlist(self.root_dir)
                     self.full_index = self.dirlist_final.copy()
                     self.max_chars = len(max(self.full_index, key=lambda x: len(x["formatted_dirname"]))["formatted_dirname"])
@@ -457,7 +458,9 @@ class Previewer:
                     # Print File Preview
                     prefix_len = len(str(len(self.preview_file_content))) + 2
                     prefix_len_2 = len(str(len(self.preview_file_content)))
-                    filename = self.preview_file_path.replace(self.root_dir, '')
+                    filename = self.preview_file_path
+                    if self.root_dir != '/':
+                        filename = self.preview_file_path.replace(self.root_dir, '')
                     filename = filename[1:] if filename.startswith('/') else filename
                     self.preview_window.attron(curses.color_pair(1))
                     self.preview_window.addstr(0, 3 + prefix_len, "Preview file: ")
