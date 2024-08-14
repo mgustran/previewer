@@ -1,15 +1,16 @@
-import subprocess
 
 from previewer import Previewer
+from previewer_preview import PreviewerPreview
 from previewer_tree import PreviewerTree
 
 
 class PreviewerKeys:
     # from previewer_tree import PreviewerTree
 
-    def __init__(self, root: Previewer, tree: PreviewerTree):
+    def __init__(self, root: Previewer, tree: PreviewerTree, preview: PreviewerPreview):
         self.root = root
         self.tree = tree
+        self.preview = preview
 
     def key_down(self):
         if not self.root.focus_on_preview:
@@ -20,10 +21,10 @@ class PreviewerKeys:
                 if len(self.tree.full_index) - (self.tree.scroll_top + 1 if self.tree.scroll_top > 0 else 0) > (self.root.height - 4):
                     self.tree.scroll_top = self.tree.scroll_top + 1
         else:
-            if (self.root.scroll_top_preview + (self.root.height - 4)) > len(self.root.preview_file_content):
+            if (self.preview.scroll_top_preview + (self.root.height - 4)) > len(self.preview.preview_file_content):
                 pass
             else:
-                self.root.scroll_top_preview = self.root.scroll_top_preview + 1
+                self.preview.scroll_top_preview = self.preview.scroll_top_preview + 1
 
     def key_up(self):
         if not self.root.focus_on_preview:
@@ -35,11 +36,11 @@ class PreviewerKeys:
                 elif self.tree.cursor_y == 0:
                     self.tree.cursor_y = -1
         else:
-            self.root.scroll_top_preview = (self.root.scroll_top_preview - 1) if self.root.scroll_top_preview > 0 else self.root.scroll_top_preview
+            self.preview.scroll_top_preview = (self.preview.scroll_top_preview - 1) if self.preview.scroll_top_preview > 0 else self.preview.scroll_top_preview
 
     def key_right(self):
         if not self.root.focus_on_preview:
-            self.root.scroll_top_preview = 0
+            self.preview.scroll_top_preview = 0
             # subtitle_str = "Trying to open " + [self.tree_panel.cursor_y + self.scroll_top]['file_path']
             if self.tree.full_index[self.tree.cursor_y + self.tree.scroll_top]['is_dir']:
                 self.tree.full_index[self.tree.cursor_y + self.tree.scroll_top]['is_open'] = True

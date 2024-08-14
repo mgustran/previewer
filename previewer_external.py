@@ -2,7 +2,9 @@ import curses
 import subprocess
 import time
 
-# from previewer import suspend_curses
+from previewer import Previewer
+from previewer_preview import PreviewerPreview
+from previewer_tree import PreviewerTree
 
 
 class suspend_curses:
@@ -19,9 +21,10 @@ class suspend_curses:
 
 
 class PreviewerExternal:
-    def __init__(self, root, tree):
+    def __init__(self, root: Previewer, tree: PreviewerTree, preview: PreviewerPreview):
         self.root = root
         self.tree = tree
+        self.preview = preview
 
     def open_file_with(self, app, wait=False):
         isdir = False
@@ -29,7 +32,7 @@ class PreviewerExternal:
             isdir = self.tree.full_index[self.tree.cursor_y + self.tree.scroll_top]['is_dir']
             dir1 = self.tree.full_index[self.tree.cursor_y + self.tree.scroll_top]['file_path']
         else:
-            dir1 = self.root.preview_file_path
+            dir1 = self.preview.preview_file_path
 
         if not isdir:
             with suspend_curses():
@@ -43,19 +46,19 @@ class PreviewerExternal:
                         pass
 
     def open_file(self, target):
-        self.root.preview_file_path = target
+        self.preview.preview_file_path = target
         self.root.focus_on_preview = True
-        self.root.initial_display = False
+        self.preview.initial_display = False
 
         lines7 = self.get_file_lines(target)
         try:
-            file1 = open(self.root.preview_file_path, 'r')
+            file1 = open(self.preview.preview_file_path, 'r')
             # num_lines = sum(1 for _ in file1)
             # print(num_lines)
-            self.root.preview_file_content = file1.readlines()
+            self.preview.preview_file_content = file1.readlines()
 
-            if len(self.root.preview_file_content) < lines7:
-                self.root.preview_file_content.append('')
+            if len(self.preview.preview_file_content) < lines7:
+                self.preview.preview_file_content.append('')
         except Exception as e:
             # todo: log somewhere
             pass

@@ -97,26 +97,29 @@ class PreviewerTree:
             if y > (self.root.height - 4):
                 continue
 
-            extra_chars = 0
-            if dir["is_dir"]:
-                self.tree_window.attron(curses.A_BOLD)
-                if dir["file_name"].startswith("."):
-                    self.tree_window.attron(curses.A_DIM)
-                dir["formatted_dirname"] = dir["formatted_dirname"].replace(" + " if dir["is_open"] else " - ", " - " if dir["is_open"] else " + ")
-            if self.cursor_y == y:
-                if self.root.focus_on_preview:
-                    self.tree_window.attron(curses.A_DIM)
-                    self.tree_window.attron(curses.color_pair(1))
+            try:
+
+                extra_chars = 0
+                if dir["is_dir"]:
+                    self.tree_window.attron(curses.A_BOLD)
+                    if dir["file_name"].startswith("."):
+                        self.tree_window.attron(curses.A_DIM)
+                    dir["formatted_dirname"] = dir["formatted_dirname"].replace(" + " if dir["is_open"] else " - ", " - " if dir["is_open"] else " + ")
+                if self.cursor_y == y:
+                    if self.root.focus_on_preview:
+                        self.tree_window.attron(curses.A_DIM)
+                        self.tree_window.attron(curses.color_pair(1))
+                    else:
+                        self.tree_window.attron(curses.color_pair(2))
+                    self.tree_window.addstr(y + 2, 0, dir["formatted_dirname"])
+                    extra_chars = self.max_chars - len(dir["formatted_dirname"])
+                    self.tree_window.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
+                    self.tree_window.attroff(curses.color_pair(2))
+                    self.tree_window.attroff(curses.color_pair(1))
+                    self.tree_window.attroff(curses.A_DIM)
                 else:
-                    self.tree_window.attron(curses.color_pair(2))
-                self.tree_window.addstr(y + 2, 0, dir["formatted_dirname"])
-                extra_chars = self.max_chars - len(dir["formatted_dirname"])
-                self.tree_window.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
-                self.tree_window.attroff(curses.color_pair(2))
-                self.tree_window.attroff(curses.color_pair(1))
-            else:
-                try:
-                    if dir["file_path"] == self.root.preview_file_path:
+                    # try:
+                    if dir["file_path"] == self.root.preview_panel.preview_file_path:
                         self.tree_window.attron(curses.color_pair(1))
                         self.tree_window.attron(curses.A_DIM)
                     else:
@@ -124,14 +127,22 @@ class PreviewerTree:
                     self.tree_window.addstr(y + 2, 0, dir["formatted_dirname"])
                     extra_chars = self.max_chars - len(dir["formatted_dirname"])
                     self.tree_window.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
-                    self.tree_window.attron(curses.color_pair(1))
-                    self.tree_window.attron(curses.color_pair(6))
-                    self.tree_window.attron(curses.A_DIM)
-                except Exception as e:
-                    # todo: log error somewhere
-                    # print(e)
-                    pass
-            self.tree_window.attroff(curses.A_BOLD)
-            self.tree_window.attroff(curses.A_DIM)
+                    if dir["file_path"] == self.root.preview_panel.preview_file_path:
+                        self.tree_window.attroff(curses.color_pair(1))
+                        self.tree_window.attroff(curses.A_DIM)
+                    else:
+                        self.tree_window.attroff(curses.color_pair(6))
 
-            y = y + 1
+                    # except Exception as e:
+                    #     # todo: log error somewhere
+                    #     # print(e)
+                    #     pass
+                self.tree_window.attroff(curses.A_BOLD)
+                self.tree_window.attroff(curses.A_DIM)
+
+                y = y + 1
+
+            except Exception as e:
+                # todo: log error somewhere
+                # print(e)
+                pass

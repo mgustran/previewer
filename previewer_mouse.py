@@ -1,13 +1,18 @@
 import curses
 
+from previewer import Previewer
+from previewer_preview import PreviewerPreview
+from previewer_tree import PreviewerTree
+
 
 class PreviewerMouse:
 
     mouse_key_event_press = None
 
-    def __init__(self, root, tree):
+    def __init__(self, root: Previewer, tree: PreviewerTree, preview: PreviewerPreview):
         self.root = root
         self.tree = tree
+        self.preview = preview
 
     def key_mouse(self):
         try:
@@ -23,7 +28,7 @@ class PreviewerMouse:
                 # pass
 
             else:
-                if self.root.preview_file_path is not None:
+                if self.preview.preview_file_path is not None:
                     if mouse_event[4] == 2:
                         self.mouse_key_event_press = True
                     elif mouse_event[4] == 1:
@@ -32,13 +37,13 @@ class PreviewerMouse:
                         self.root.highlight_positions = [-1, -1, -1, -1]
 
                     if self.mouse_key_event_press is not None:
-                        prefix_len = len(str(len(self.root.preview_file_content))) + 2
+                        prefix_len = len(str(len(self.preview.preview_file_content))) + 2
                         # original
                         # self.highlight_positions[0 if mouse_key_event_press else 2] = mouse_event[1] - (self.tree_panel.max_chars + 10 + prefix_len)
                         # self.highlight_positions[1 if mouse_key_event_press else 3] = mouse_event[2] - 3 + self.scroll_top_preview
 
-                        self.root.highlight_positions[0 if self.mouse_key_event_press else 2] = mouse_event[1]
-                        self.root.highlight_positions[1 if self.mouse_key_event_press else 3] = mouse_event[2]
+                        self.preview.highlight_positions[0 if self.mouse_key_event_press else 2] = mouse_event[1]
+                        self.preview.highlight_positions[1 if self.mouse_key_event_press else 3] = mouse_event[2]
 
                 else:
                     # self.screen.addstr(0, 50, str(mouse_event))
