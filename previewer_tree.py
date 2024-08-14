@@ -30,7 +30,7 @@ class PreviewerTree:
     def init_index(self):
         self.dirlist_final = self.reload_dirlist(self.root.root_dir)
         self.full_index = self.dirlist_final.copy()
-        self.max_chars = len(max(self.full_index, key=lambda x: len(x["formatted_dirname"]))["formatted_dirname"])
+        self.reload_max_chars()
 
     def init_panel(self):
         self.tree_window = curses.newwin(self.root.height - 1, self.max_chars + 2, 0, 0)
@@ -63,6 +63,12 @@ class PreviewerTree:
         sublist2 = sorted([x for x in list_final if not x["is_dir"]], key=lambda z: z["file_name"])
 
         return sublist1 + sublist2
+
+    def reload_max_chars(self):
+        root_name = " " + os.path.basename(self.root.root_dir) if self.root.root_dir != '/' else '/'
+        temp_index = self.full_index.copy()
+        temp_index.append({"formatted_dirname": root_name})
+        self.max_chars = len(max(temp_index, key=lambda x: len(x["formatted_dirname"]))["formatted_dirname"])
 
     def draw_file_tree(self):
 

@@ -141,7 +141,7 @@ class Previewer:
             elif key == curses.KEY_MOUSE:
                 self.mouse.key_mouse()
 
-            statusbarstr = f"'q' : exit | ← → ↑ ↓ | 'b/n/m' : open in vim/nano/micro"
+            statusbarstr = f"'q' : exit | ← → ↑ ↓ ↲ | 'b/n/m' : open in vim/nano/micro"
 
             if self.debug_statusbar:
                 statusbarstr = statusbarstr + (" " * 30) + ("Key: {} | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {} | Colors: {} | err: {}"
