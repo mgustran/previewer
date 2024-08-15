@@ -9,12 +9,12 @@ def init_colors():
     # Start colors in curses
     curses.start_color()
 
-    curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLUE)
-    curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
-    curses.init_pair(4, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-    curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
-    curses.init_pair(6, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(11, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_BLUE)
+    curses.init_pair(13, curses.COLOR_BLACK, curses.COLOR_WHITE)
+    curses.init_pair(14, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+    curses.init_pair(15, curses.COLOR_BLUE, curses.COLOR_BLACK)
+    curses.init_pair(16, curses.COLOR_WHITE, curses.COLOR_BLACK)
 
 
 class Previewer:
@@ -133,10 +133,21 @@ class Previewer:
             elif key == 109:  # M
                 self.external.open_file_with("micro")
 
-            # todo: Redo with mouse event type
-            elif key == 104:  # H / Help
-
+            elif key == 104 and False:  # H / Help / note: Deactivated
                 self.show_help = not self.show_help
+                if self.show_help:
+                    self.msg_window = curses.newwin(7, 20, 10, 10)
+                    self.msg_window.bkgd(' ', curses.color_pair(2))
+                    # self.msg_window.
+                    self.msg_window.attron(curses.color_pair(15))
+                    self.msg_window.addstr(0, 0, "PATACAS")
+                    self.msg_window.attroff(curses.color_pair(15))
+                    self.msg_window.overlay(self.screen)
+                    # self.init_colors()
+                else:
+                    if self.msg_window is not None:
+                        self.msg_window.erase()
+                        self.msg_window = None
 
             elif key == curses.KEY_MOUSE:
                 self.mouse.key_mouse()
@@ -155,10 +166,10 @@ class Previewer:
             # Render status bar
             try:
 
-                self.screen.attron(curses.color_pair(3))
+                self.screen.attron(curses.color_pair(13))
                 self.screen.addstr(self.height-1, 0, statusbarstr)
                 self.screen.addstr(self.height-1, len(statusbarstr), (" " * (self.width - len(statusbarstr) - 1)))
-                self.screen.attroff(curses.color_pair(3))
+                self.screen.attroff(curses.color_pair(13))
             except Exception as e:
                 # todo: log error somewhere
                 # self.screen.addstr(self.height - 1, 0, str(e))
@@ -191,19 +202,19 @@ class Previewer:
                 #     # self.preview_window.move(self.tree_panel.cursor_y, self.cursor_x)
                 #     self.preview_panel.preview_window.move(self.tree_panel.cursor_y, 0)
 
-                if self.show_help:
-                    self.msg_window = curses.newwin(7, 20, 10, 10)
-                    self.msg_window.bkgd(' ', curses.color_pair(2))
-                    # self.msg_window.
-                    self.msg_window.attron(curses.color_pair(5))
-                    self.msg_window.addstr(0, 0, "PATACAS")
-                    self.msg_window.attroff(curses.color_pair(5))
-                    self.msg_window.overlay(self.screen)
-                    # self.init_colors()
-                else:
-                    if self.msg_window is not None:
-                        self.msg_window.erase()
-                        self.msg_window = None
+                # if self.show_help:
+                #     self.msg_window = curses.newwin(7, 20, 10, 10)
+                #     self.msg_window.bkgd(' ', curses.color_pair(2))
+                #     # self.msg_window.
+                #     self.msg_window.attron(curses.color_pair(15))
+                #     self.msg_window.addstr(0, 0, "PATACAS")
+                #     self.msg_window.attroff(curses.color_pair(15))
+                #     self.msg_window.overlay(self.screen)
+                #     # self.init_colors()
+                # else:
+                #     if self.msg_window is not None:
+                #         self.msg_window.erase()
+                #         self.msg_window = None
 
             except Exception as e:
                 print(e)

@@ -76,22 +76,22 @@ class PreviewerTree:
 
         self.tree_window.attron(curses.A_BOLD)
         if self.cursor_y == -1:
-            self.tree_window.attron(curses.color_pair(2))
+            self.tree_window.attron(curses.color_pair(12))
 
         self.tree_window.addstr(0, 0, " .. ")
         self.tree_window.attroff(curses.A_BOLD)
         extra_chars = self.max_chars - len(" .. ")
-        # self.tree_window.attron(curses.color_pair(4))
+        # self.tree_window.attron(curses.color_pair(14))
         # self.tree_window.addstr(0, len(" .. "), (" " * extra_chars) + "  ||")
-        # self.tree_window.attroff(curses.color_pair(4))
-        self.tree_window.attroff(curses.color_pair(2))
+        # self.tree_window.attroff(curses.color_pair(14))
+        self.tree_window.attroff(curses.color_pair(12))
 
-        self.tree_window.attron(curses.color_pair(5))
+        self.tree_window.attron(curses.color_pair(15))
         self.tree_window.attron(curses.A_BOLD)
         self.tree_window.addstr(1, 0, " " + root_dirname)
         self.tree_window.attroff(curses.A_BOLD)
         extra_chars = self.max_chars - (len(root_dirname) + 1)
-        self.tree_window.attroff(curses.color_pair(5))
+        self.tree_window.attroff(curses.color_pair(15))
 
         y = 0
 
@@ -114,30 +114,30 @@ class PreviewerTree:
                 if self.cursor_y == y:
                     if self.root.focus_on_preview:
                         self.tree_window.attron(curses.A_DIM)
-                        self.tree_window.attron(curses.color_pair(1))
+                        self.tree_window.attron(curses.color_pair(11))
                     else:
-                        self.tree_window.attron(curses.color_pair(2))
+                        self.tree_window.attron(curses.color_pair(12))
                     self.tree_window.addstr(y + 2, 0, dir["formatted_dirname"])
                     extra_chars = self.max_chars - len(dir["formatted_dirname"])
                     self.tree_window.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
-                    self.tree_window.attroff(curses.color_pair(2))
-                    self.tree_window.attroff(curses.color_pair(1))
+                    self.tree_window.attroff(curses.color_pair(12))
+                    self.tree_window.attroff(curses.color_pair(11))
                     self.tree_window.attroff(curses.A_DIM)
                 else:
                     # try:
                     if dir["file_path"] == self.root.preview_panel.preview_file_path:
-                        self.tree_window.attron(curses.color_pair(1))
+                        self.tree_window.attron(curses.color_pair(11))
                         self.tree_window.attron(curses.A_DIM)
                     else:
-                        self.tree_window.attron(curses.color_pair(6))
+                        self.tree_window.attron(curses.color_pair(16))
                     self.tree_window.addstr(y + 2, 0, dir["formatted_dirname"])
                     extra_chars = self.max_chars - len(dir["formatted_dirname"])
                     self.tree_window.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
                     if dir["file_path"] == self.root.preview_panel.preview_file_path:
-                        self.tree_window.attroff(curses.color_pair(1))
+                        self.tree_window.attroff(curses.color_pair(11))
                         self.tree_window.attroff(curses.A_DIM)
                     else:
-                        self.tree_window.attroff(curses.color_pair(6))
+                        self.tree_window.attroff(curses.color_pair(16))
 
                     # except Exception as e:
                     #     # todo: log error somewhere

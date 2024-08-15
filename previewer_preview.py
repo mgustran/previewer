@@ -1,5 +1,7 @@
 import curses
 
+import culour
+
 import previewer
 
 class PreviewerPreview:
@@ -35,20 +37,24 @@ class PreviewerPreview:
             start_y = int((self.root.height // 2) - 2)
 
             # Turning on attributes for title
-            self.preview_window.attron(curses.color_pair(2))
+            self.preview_window.attron(curses.color_pair(12))
             self.preview_window.attron(curses.A_BOLD)
 
             # Rendering title
             self.preview_window.addstr(start_y, start_x_title, title)
 
             # Turning off attributes for title
-            self.preview_window.attroff(curses.color_pair(2))
+            self.preview_window.attroff(curses.color_pair(12))
             self.preview_window.attroff(curses.A_BOLD)
 
             # Print rest of text
             self.preview_window.addstr(start_y + 1, start_x_subtitle, subtitle)
             # self.screen.addstr(start_y + 2, (self.width // 2) - 2, '-' * 4)
             # self.screen.addstr(start_y + 3, start_x_keystr, keystr)
+
+            # working culour preformatted text, but breaks current pairs
+            culour.addstr(self.preview_window, start_y + 2, start_x_subtitle, "I \033[91mlove\033[0m Stack Overflow")
+            culour.addstr(self.preview_window, start_y + 3, start_x_subtitle, "\x1b[96mprint\x1b[0m \x1b[93m\"\x1b[0m\x1b[93mHello World\x1b[0m\x1b[93m\"\x1b[0m\x1b[90m\x1b[0m")
 
         # Cursor outside tree view, show preview display
         else:
@@ -59,18 +65,18 @@ class PreviewerPreview:
             if self.root.root_dir != '/':
                 filename = self.preview_file_path.replace(self.root.root_dir, '')
             filename = filename[1:] if filename.startswith('/') else filename
-            self.preview_window.attron(curses.color_pair(1))
+            self.preview_window.attron(curses.color_pair(11))
             self.preview_window.addstr(0, 3 + prefix_len, "Preview file: ")
             self.preview_window.attron(curses.A_BOLD)
             self.preview_window.addstr(0, 3 + prefix_len + len("Preview file: "), filename)
             self.preview_window.attroff(curses.A_BOLD)
             self.preview_window.addstr(1, 3 + prefix_len, len("Preview file: " + filename) * "-")
-            self.preview_window.attroff(curses.color_pair(1))
+            self.preview_window.attroff(curses.color_pair(11))
 
             if self.scroll_top_preview > 0:
-                self.preview_window.attron(curses.color_pair(1))
+                self.preview_window.attron(curses.color_pair(11))
                 self.preview_window.addstr(2, 2, "..")
-                self.preview_window.attroff(curses.color_pair(1))
+                self.preview_window.attroff(curses.color_pair(11))
 
             # todo: fix line longer than terminal width
             y = 0
@@ -78,18 +84,18 @@ class PreviewerPreview:
                 if self.scroll_top_preview > idx:
                     continue
                 if y <= (self.root.height - 6):
-                    self.preview_window.attron(curses.color_pair(1))
+                    self.preview_window.attron(curses.color_pair(11))
                     self.preview_window.addstr(3 + y, 1, " " * self.get_spaces_by_number(idx + 1, prefix_len_2) + str(
                         idx + 1) + " |")
-                    self.preview_window.attroff(curses.color_pair(1))
+                    self.preview_window.attroff(curses.color_pair(11))
                     self.preview_window.addstr(3 + y, 3 + prefix_len, line)
                     self.preview_window.attroff(curses.A_REVERSE)
                     y = y + 1
 
                 if y == (self.root.height - 5) and idx < len(self.preview_file_content) - 1:  # Last line
-                    self.preview_window.attron(curses.color_pair(1))
+                    self.preview_window.attron(curses.color_pair(11))
                     self.preview_window.addstr(3 + y, 2, "..")
-                    self.preview_window.attroff(curses.color_pair(1))
+                    self.preview_window.attroff(curses.color_pair(11))
                     break
 
             if self.root.mouse.mouse_key_event_press is False:
