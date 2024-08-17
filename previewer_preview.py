@@ -1,8 +1,10 @@
 import curses
 
-import culour
+import culour_mod as culour
 
 import previewer
+from pygments_converter import format_pygments_line
+
 
 class PreviewerPreview:
     
@@ -88,7 +90,7 @@ class PreviewerPreview:
                     self.preview_window.addstr(3 + y, 1, " " * self.get_spaces_by_number(idx + 1, prefix_len_2) + str(
                         idx + 1) + " |")
                     self.preview_window.attroff(curses.color_pair(11))
-                    self.preview_window.addstr(3 + y, 3 + prefix_len, line)
+                    culour.addstr(self.preview_window, 3 + y, 3 + prefix_len, format_pygments_line(line))
                     self.preview_window.attroff(curses.A_REVERSE)
                     y = y + 1
 

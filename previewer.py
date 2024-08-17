@@ -15,38 +15,21 @@ def init_colors():
     curses.init_pair(14, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
     curses.init_pair(15, curses.COLOR_BLUE, curses.COLOR_BLACK)
     curses.init_pair(16, curses.COLOR_WHITE, curses.COLOR_BLACK)
+    curses.init_pair(17, curses.COLOR_BLACK, curses.COLOR_BLUE)
+    curses.init_pair(18, curses.COLOR_WHITE, curses.COLOR_BLUE)
+    curses.init_pair(19, curses.COLOR_RED, curses.COLOR_BLUE)
 
 
 class Previewer:
 
-    # counter_files = 0
-    # max_chars = 0
-    #
-    # dirlist_final = []
-    # full_index = []
     height, width = 0, 0
 
-    # scroll_top = 0
-    # scroll_top_preview = 0
-    #
-    # preview_file_path = None
-    # preview_file_content = []
-    #
-    # highlight_positions = [-1, -1, -1, -1]
-
-    # cursor_x = 0
-    # cursor_y = 0
-
     focus_on_preview = False
-    # initial_display = True
-
-    # mouse_key_event_press = None
 
     msg_window = None
     show_help = False
     last_error = ''
 
-    # tree_window = None
     tree_panel = None
     preview_panel = None
 
@@ -133,17 +116,17 @@ class Previewer:
             elif key == 109:  # M
                 self.external.open_file_with("micro")
 
-            elif key == 104 and False:  # H / Help / note: Deactivated
+            elif key == 104:  # H / Help
                 self.show_help = not self.show_help
                 if self.show_help:
-                    self.msg_window = curses.newwin(7, 20, 10, 10)
-                    self.msg_window.bkgd(' ', curses.color_pair(2))
-                    # self.msg_window.
-                    self.msg_window.attron(curses.color_pair(15))
-                    self.msg_window.addstr(0, 0, "PATACAS")
-                    self.msg_window.attroff(curses.color_pair(15))
-                    self.msg_window.overlay(self.screen)
-                    # self.init_colors()
+                    self.msg_window = curses.newwin(7, 34, int(self.height / 2) - 4, int(self.width / 2) - 15)
+                    self.msg_window.bkgd(' ', curses.color_pair(12))
+                    self.msg_window.border()
+                    self.msg_window.addstr(0, 15, "HELP", curses.color_pair(19))
+                    self.msg_window.addstr(1, 12, "Navigation", curses.color_pair(17))
+                    self.msg_window.addstr(2, 2, "← → ↑ ↓ ↲ and mouse wheel/keys", curses.color_pair(18))
+                    self.msg_window.addstr(4, 13, "Open in", curses.color_pair(17))
+                    self.msg_window.addstr(5, 5, "vim: B  nano: N  micro: M", curses.color_pair(18))
                 else:
                     if self.msg_window is not None:
                         self.msg_window.erase()
@@ -152,10 +135,10 @@ class Previewer:
             elif key == curses.KEY_MOUSE:
                 self.mouse.key_mouse()
 
-            statusbarstr = f"'q' : exit | ← → ↑ ↓ ↲ | 'b/n/m' : open in vim/nano/micro"
+            statusbarstr = f"'q' : exit | ← → ↑ ↓ ↲ | 'h' : help"
 
             if self.debug_statusbar:
-                statusbarstr = statusbarstr + (" " * 30) + ("Key: {} | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {} | Colors: {} | err: {}"
+                statusbarstr = statusbarstr + (" " * 10) + ("Key: {} | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {} | Colors: {} | err: {}"
                                 .format(key, 0, self.tree_panel.cursor_y, str(len(self.tree_panel.full_index)),
                                         self.tree_panel.cursor_y + self.tree_panel.scroll_top, self.tree_panel.scroll_top,
                                         self.preview_panel.scroll_top_preview,
@@ -171,8 +154,7 @@ class Previewer:
                 self.screen.addstr(self.height-1, len(statusbarstr), (" " * (self.width - len(statusbarstr) - 1)))
                 self.screen.attroff(curses.color_pair(13))
             except Exception as e:
-                # todo: log error somewhere
-                # self.screen.addstr(self.height - 1, 0, str(e))
+                self.last_error = str(e)
                 pass
             # Print Dir List
             try:
@@ -197,29 +179,8 @@ class Previewer:
                 # Cursor in tree view, show initial display
                 self.preview_panel.draw_preview(key)
 
-                # todo: wtf is this
-                # if not self.focus_on_preview:
-                #     # self.preview_window.move(self.tree_panel.cursor_y, self.cursor_x)
-                #     self.preview_panel.preview_window.move(self.tree_panel.cursor_y, 0)
-
-                # if self.show_help:
-                #     self.msg_window = curses.newwin(7, 20, 10, 10)
-                #     self.msg_window.bkgd(' ', curses.color_pair(2))
-                #     # self.msg_window.
-                #     self.msg_window.attron(curses.color_pair(15))
-                #     self.msg_window.addstr(0, 0, "PATACAS")
-                #     self.msg_window.attroff(curses.color_pair(15))
-                #     self.msg_window.overlay(self.screen)
-                #     # self.init_colors()
-                # else:
-                #     if self.msg_window is not None:
-                #         self.msg_window.erase()
-                #         self.msg_window = None
-
             except Exception as e:
-                print(e)
                 self.last_error = str(e)
-                # todo: log error somewhere
                 pass
 
             # Refresh the screen

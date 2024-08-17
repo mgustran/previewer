@@ -21,11 +21,8 @@ class PreviewerTree:
 
     tree_window = None
 
-    # from previewer import Previewer
     def __init__(self, root: previewer.Previewer):
         self.root = root
-
-
 
     def init_index(self):
         self.dirlist_final = self.reload_dirlist(self.root.root_dir)
@@ -80,10 +77,6 @@ class PreviewerTree:
 
         self.tree_window.addstr(0, 0, " .. ")
         self.tree_window.attroff(curses.A_BOLD)
-        extra_chars = self.max_chars - len(" .. ")
-        # self.tree_window.attron(curses.color_pair(14))
-        # self.tree_window.addstr(0, len(" .. "), (" " * extra_chars) + "  ||")
-        # self.tree_window.attroff(curses.color_pair(14))
         self.tree_window.attroff(curses.color_pair(12))
 
         self.tree_window.attron(curses.color_pair(15))
@@ -105,7 +98,6 @@ class PreviewerTree:
 
             try:
 
-                extra_chars = 0
                 if dir["is_dir"]:
                     self.tree_window.attron(curses.A_BOLD)
                     if dir["file_name"].startswith("."):
@@ -124,7 +116,6 @@ class PreviewerTree:
                     self.tree_window.attroff(curses.color_pair(11))
                     self.tree_window.attroff(curses.A_DIM)
                 else:
-                    # try:
                     if dir["file_path"] == self.root.preview_panel.preview_file_path:
                         self.tree_window.attron(curses.color_pair(11))
                         self.tree_window.attron(curses.A_DIM)
@@ -139,16 +130,11 @@ class PreviewerTree:
                     else:
                         self.tree_window.attroff(curses.color_pair(16))
 
-                    # except Exception as e:
-                    #     # todo: log error somewhere
-                    #     # print(e)
-                    #     pass
                 self.tree_window.attroff(curses.A_BOLD)
                 self.tree_window.attroff(curses.A_DIM)
 
                 y = y + 1
 
             except Exception as e:
-                # todo: log error somewhere
-                # print(e)
+                self.root.last_error = str(e)
                 pass

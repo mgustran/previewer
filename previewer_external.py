@@ -2,6 +2,11 @@ import curses
 import subprocess
 import time
 
+from pygments import highlight
+from pygments.formatters.terminal import TerminalFormatter
+from pygments.lexers import get_lexer_for_filename
+from pygments.util import ClassNotFound
+
 from previewer import Previewer
 from previewer_preview import PreviewerPreview
 from previewer_tree import PreviewerTree
@@ -55,13 +60,23 @@ class PreviewerExternal:
             file1 = open(self.preview.preview_file_path, 'r')
             # num_lines = sum(1 for _ in file1)
             # print(num_lines)
-            self.preview.preview_file_content = file1.readlines()
+
+            code2 = file1.read().encode('utf-8')
+
+            try:
+                formatter = TerminalFormatter(bg='dark')
+                lexer = get_lexer_for_filename(file1.name)
+                result1 = highlight(code2, lexer, formatter)
+            except ClassNotFound:
+                result1 = code2.decode('utf-8')
+            file1.close()
+
+            self.preview.preview_file_content = result1.split('\n')
 
             if len(self.preview.preview_file_content) < lines7:
                 self.preview.preview_file_content.append('')
         except Exception as e:
-            # todo: log somewhere
-            pass
+            self.root.last_error = str(e)
 
     def get_file_lines(self, filename):
         output = subprocess.check_output(('wc', '-l', filename))

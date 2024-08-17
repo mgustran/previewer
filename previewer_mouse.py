@@ -22,10 +22,9 @@ class PreviewerMouse:
             # add scroll function type
             if mouse_event[4] == 65536:  # scroll up
                 self.root.keys.key_up()
-                # pass
+
             elif mouse_event[4] == 2097152:  # scroll down
                 self.root.keys.key_down()
-                # pass
 
             else:
                 if self.preview.preview_file_path is not None:
@@ -45,10 +44,5 @@ class PreviewerMouse:
                         self.preview.highlight_positions[0 if self.mouse_key_event_press else 2] = mouse_event[1]
                         self.preview.highlight_positions[1 if self.mouse_key_event_press else 3] = mouse_event[2]
 
-                else:
-                    # self.screen.addstr(0, 50, str(mouse_event))
-                    # self.screen.addstr(1, 50, str(mouse_key_event_press))
-                    pass
         except Exception as e:
-            # todo: log error somewhere
-            self.root.screen.addstr(2, 50, "TAMARE: " + str(e))
+            self.root.last_error = str(e)
