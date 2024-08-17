@@ -11,6 +11,8 @@ from previewer import Previewer
 from previewer_preview import PreviewerPreview
 from previewer_tree import PreviewerTree
 
+from pygments_converter import TERMINAL_CUSTOM_COLORS
+
 
 class suspend_curses:
     """Context Manager to temporarily leave curses mode"""
@@ -55,26 +57,33 @@ class PreviewerExternal:
         self.root.focus_on_preview = True
         self.preview.initial_display = False
 
+        self.preview.preview_file_content = []
+
         lines7 = self.get_file_lines(target)
         try:
             file1 = open(self.preview.preview_file_path, 'r')
-            # num_lines = sum(1 for _ in file1)
-            # print(num_lines)
 
-            code2 = file1.read().encode('utf-8')
+            code1 = file1.read()
+            code2 = code1.encode('utf-8')
 
             try:
-                formatter = TerminalFormatter(bg='dark')
+                # formatter = TerminalFormatter(bg='dark')
+                formatter = TerminalFormatter(bg='dark', colorscheme=TERMINAL_CUSTOM_COLORS)
                 lexer = get_lexer_for_filename(file1.name)
                 result1 = highlight(code2, lexer, formatter)
             except ClassNotFound:
-                result1 = code2.decode('utf-8')
+                result1 = code1
             file1.close()
 
-            self.preview.preview_file_content = result1.split('\n')
+            original = code1.split('\n')
+            coloured = result1.split('\n')
+
+            for idx, line in enumerate(original):
+                self.preview.preview_file_content.append([line, coloured[idx]])
 
             if len(self.preview.preview_file_content) < lines7:
-                self.preview.preview_file_content.append('')
+                self.preview.preview_file_content.append(['', ''])
+
         except Exception as e:
             self.root.last_error = str(e)
 

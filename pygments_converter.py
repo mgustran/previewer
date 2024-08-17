@@ -1,11 +1,44 @@
 import re
 
+from pygments.token import Token, Whitespace, Comment, Keyword, Operator, Name, String, Number, Generic, Error
 
-def format_pygments_line(line):
+TERMINAL_CUSTOM_COLORS = {
+    Token:              ('',            ''),
+
+    Whitespace:         ('gray',   'brightblack'),
+    Comment:            ('gray',   'brightblack'),
+    Comment.Preproc:    ('cyan',        'brightcyan'),
+    Keyword:            ('blue',    'brightblue'),
+    Keyword.Type:       ('cyan',        'brightcyan'),
+    Operator.Word:      ('magenta',      'brightmagenta'),
+    Name.Builtin:       ('cyan',        'brightcyan'),
+    Name.Function:      ('green',   'yellow'),
+    Name.Namespace:     ('_cyan_',      '_brightcyan_'),
+    Name.Class:         ('_green_', '_yellow_'),
+    Name.Exception:     ('cyan',        'brightcyan'),
+    Name.Decorator:     ('brightblack',    'gray'),
+    Name.Variable:      ('red',     'brightred'),
+    Name.Constant:      ('red',     'brightred'),
+    Name.Attribute:     ('cyan',        'brightcyan'),
+    Name.Tag:           ('brightblue',        'brightblue'),
+    String:             ('yellow',       'brightgreen'),
+    Number:             ('blue',    'brightblue'),
+
+    Generic.Deleted:    ('brightred',        'brightred'),
+    Generic.Inserted:   ('green',  'yellow'),
+    Generic.Heading:    ('**',         '**'),
+    Generic.Subheading: ('*magenta*',   '*brightmagenta*'),
+    Generic.Prompt:     ('**',         '**'),
+    Generic.Error:      ('brightred',        'brightred'),
+
+    Error:              ('_brightred_',      '_brightred_'),
+}
+
+def format_pygments_line(line: list):
     ansi_escape1 = re.compile(r"(\x1b\[[0-9]([0-9])m)")
     ansi_escape2 = re.compile(r"(\x1b\[[0-9]{2};[0-9]{2};[0-9]([0-9])m)")
 
-    line_copy = line
+    line_copy = line[1]
 
     # line_copy = line_copy.replace('\x1b[90m', '\x1b[0m')
 

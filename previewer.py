@@ -118,24 +118,11 @@ class Previewer:
 
             elif key == 104:  # H / Help
                 self.show_help = not self.show_help
-                if self.show_help:
-                    self.msg_window = curses.newwin(7, 34, int(self.height / 2) - 4, int(self.width / 2) - 15)
-                    self.msg_window.bkgd(' ', curses.color_pair(12))
-                    self.msg_window.border()
-                    self.msg_window.addstr(0, 15, "HELP", curses.color_pair(19))
-                    self.msg_window.addstr(1, 12, "Navigation", curses.color_pair(17))
-                    self.msg_window.addstr(2, 2, "← → ↑ ↓ ↲ and mouse wheel/keys", curses.color_pair(18))
-                    self.msg_window.addstr(4, 13, "Open in", curses.color_pair(17))
-                    self.msg_window.addstr(5, 5, "vim: B  nano: N  micro: M", curses.color_pair(18))
-                else:
-                    if self.msg_window is not None:
-                        self.msg_window.erase()
-                        self.msg_window = None
 
             elif key == curses.KEY_MOUSE:
                 self.mouse.key_mouse()
 
-            statusbarstr = f"'q' : exit | ← → ↑ ↓ ↲ | 'h' : help"
+            statusbarstr = f"'q' : exit | 'h' : help"
 
             if self.debug_statusbar:
                 statusbarstr = statusbarstr + (" " * 10) + ("Key: {} | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {} | Colors: {} | err: {}"
@@ -182,6 +169,27 @@ class Previewer:
             except Exception as e:
                 self.last_error = str(e)
                 pass
+
+            if self.show_help:
+                self.msg_window = curses.newwin(10, 38, int(self.height / 2) - 5, int(self.width / 2) - 19)
+                self.msg_window.bkgd(' ', curses.color_pair(12))
+                self.msg_window.border()
+                self.msg_window.addstr(0, 17, "HELP", curses.color_pair(19))
+                self.msg_window.addstr(1, 2, "Tree Navigation", curses.color_pair(17))
+                self.msg_window.addstr(1, 19, "← → ↑ ↓ ↲ / mouse", curses.color_pair(18))
+                self.msg_window.addstr(2, 2, "File Navigation", curses.color_pair(17))
+                self.msg_window.addstr(2, 19, "← → ↑ ↓ m-scroll", curses.color_pair(18))
+                self.msg_window.addstr(4, 2, "Set Root Folder", curses.color_pair(17))
+                self.msg_window.addstr(4, 18, "ENTER on dir or ..", curses.color_pair(18))
+                self.msg_window.addstr(6, 2, "Select / Copy", curses.color_pair(17))
+                self.msg_window.addstr(6, 17, "mouse drag / C", curses.color_pair(18))
+                self.msg_window.addstr(6, 33, "WIP", curses.color_pair(19))
+                self.msg_window.addstr(8, 2, "Open in", curses.color_pair(17))
+                self.msg_window.addstr(8, 11, "vim: B  nano: N  micro: M", curses.color_pair(18))
+            else:
+                if self.msg_window is not None:
+                    self.msg_window.erase()
+                    self.msg_window = None
 
             # Refresh the screen
             self.screen.refresh()
