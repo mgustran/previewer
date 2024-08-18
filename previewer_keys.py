@@ -73,9 +73,11 @@ class PreviewerKeys:
 
             if self.tree.cursor_y == -1 and self.root.root_dir != '/':
                 self.root.root_dir = self.root.root_dir[0:self.root.root_dir.rfind('/')] if self.root.root_dir.rfind('/') != 0 else '/'
+                self.tree.cursor_y = 0
 
             elif self.tree.full_index[self.tree.cursor_y + self.tree.scroll_top]['is_dir']:
                 self.root.root_dir = self.tree.full_index[self.tree.cursor_y + self.tree.scroll_top]['file_path']
+                self.tree.cursor_y = 0
 
             else:
                 return
