@@ -1,4 +1,5 @@
 import curses
+import logging_util as logger
 import threading
 import time
 
@@ -185,6 +186,7 @@ class PreviewerPreview:
                         culour.addstr(self.preview_window, 3 + y, 3 + prefix_len, format_pygments_line(line))
                     except Exception as e:
                         self.root.last_error = str(e)
+                        logger.error(exception=e)
                     self.preview_window.attroff(curses.A_REVERSE)
                     y = y + 1
 

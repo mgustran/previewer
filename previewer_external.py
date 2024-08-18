@@ -1,4 +1,5 @@
 import curses
+import logging_util as logger
 import subprocess
 import time
 
@@ -78,15 +79,21 @@ class PreviewerExternal:
             original = code1.split('\n')
             coloured = result1.split('\n')
 
+            if len(original) < lines7:
+                original.append('')
+
+            if len(coloured) < lines7:
+                coloured.append('')
+
             for idx, line in enumerate(original):
                 self.preview.preview_file_content.append([line, coloured[idx]])
 
-            if len(self.preview.preview_file_content) < lines7:
-                self.preview.preview_file_content.append(['', ''])
-
         except Exception as e:
             self.root.last_error = str(e)
+            logger.error(exception=e)
 
     def get_file_lines(self, filename):
         output = subprocess.check_output(('wc', '-l', filename))
         return int(output.decode().split(' ')[0]) + 1
+
+    # def debug(self):

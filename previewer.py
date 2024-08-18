@@ -5,6 +5,8 @@ import curses
 import sys
 from datetime import datetime
 
+import logging_util as logger
+
 
 def init_colors():
     # Start colors in curses
@@ -165,6 +167,7 @@ class Previewer:
 
             except Exception as e:
                 self.last_error = str(e)
+                logger.error(exception=e)
                 pass
 
             if self.show_help:
@@ -226,6 +229,8 @@ class Previewer:
                 self.screen.attroff(curses.color_pair(13))
             except Exception as e:
                 self.last_error = str(e)
+                logger.error(exception=e)
+                # logging.error(e)
                 pass
 
             # Refresh the screen
@@ -257,6 +262,20 @@ if __name__ == "__main__":
     from previewer_keys import PreviewerKeys
     from previewer_mouse import PreviewerMouse
     from previewer_external import PreviewerExternal
+
+    app_folder = os.path.expanduser('~/.config/previewer')
+    if not os.path.exists(app_folder):
+        os.makedirs(app_folder)
+
+    # log_filename = datetime.now().strftime("%Y-%m-%d__%H-%M-%S.log")
+    # logging.basicConfig(filename=os.path.join(app_folder, 'logs', log_filename),
+    #                     filemode='a',
+    #                     # format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+    #                     format='[%(asctime)s] p%(process)s {%(filename)s:%(lineno)d} %(levelname)s - %(message)s',
+    #                     # datefmt='%H:%M:%S',
+    #                     level=logging.DEBUG)
+
+    logger.init(app_folder)
 
     current_dir = os.getcwd()
     target_file = None

@@ -1,4 +1,5 @@
 import curses
+import logging_util as logger
 
 from previewer import Previewer
 from previewer_preview import PreviewerPreview
@@ -46,3 +47,4 @@ class PreviewerMouse:
 
         except Exception as e:
             self.root.last_error = str(e)
+            logger.error(exception=e)

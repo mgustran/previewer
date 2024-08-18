@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 import curses
+import logging_util as logger
 import os
 
 import previewer
@@ -137,6 +138,7 @@ class PreviewerTree:
 
             except Exception as e:
                 self.root.last_error = str(e)
+                logger.error(exception=e)
                 pass
 
         # todo: add ".." at the end of list if
