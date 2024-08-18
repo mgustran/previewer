@@ -93,7 +93,7 @@ class PreviewerTree:
             if idx < self.scroll_top:
                 continue
 
-            if y > (self.root.height - 4):
+            if y > (self.root.height - 5):
                 continue
 
             try:
@@ -138,3 +138,6 @@ class PreviewerTree:
             except Exception as e:
                 self.root.last_error = str(e)
                 pass
+
+        # todo: add ".." at the end of list if
+        # if tree length > drawn tree:

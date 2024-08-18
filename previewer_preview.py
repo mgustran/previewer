@@ -56,7 +56,8 @@ class PreviewerPreview:
                             else:
                                 stdscr.attron(curses.color_pair(11))
 
-                            stdscr.addstr((int(self.height / 2) - 4) + idx, start_x[idx] + int((self.width - max_length) / 2), logo_lines[idx][start_x[idx]])
+                            stdscr.addstr((int(self.height / 2) - 4) + idx,
+                                          start_x[idx] + int((self.width - max_length) / 2), logo_lines[idx][start_x[idx]])
 
                             stdscr.attroff(curses.A_DIM)
                             stdscr.attroff(curses.color_pair(11))
@@ -171,6 +172,7 @@ class PreviewerPreview:
                 self.preview_window.attroff(curses.color_pair(11))
 
             # todo: Add horizontal scroll
+            # todo: Fix long line jumping to next line
             y = 0
             for idx, line in enumerate(self.preview_file_content):
                 if self.scroll_top_preview > idx:

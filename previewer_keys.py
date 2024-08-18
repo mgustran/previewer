@@ -13,14 +13,14 @@ class PreviewerKeys:
 
     def key_down(self):
         if not self.root.focus_on_preview:
-            if self.tree.cursor_y < self.root.height - 4:
+            if self.tree.cursor_y < self.root.height - 5:
                 if self.tree.cursor_y < len(self.tree.full_index) - 1:
                     self.tree.cursor_y = self.tree.cursor_y + 1
             else:
-                if len(self.tree.full_index) - (self.tree.scroll_top + 1 if self.tree.scroll_top > 0 else 0) > (self.root.height - 4):
+                if len(self.tree.full_index) - (self.tree.scroll_top + 1 if self.tree.scroll_top > 0 else 0) > (self.root.height - 5):
                     self.tree.scroll_top = self.tree.scroll_top + 1
         else:
-            if (self.preview.scroll_top_preview + (self.root.height - 4)) > len(self.preview.preview_file_content):
+            if (self.preview.scroll_top_preview + (self.root.height - 5)) > len(self.preview.preview_file_content):
                 pass
             else:
                 self.preview.scroll_top_preview = self.preview.scroll_top_preview + 1
