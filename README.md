@@ -2,7 +2,7 @@
 Previewer is a file browser for linux terminal written in python with curses. \
 It is meant to easily preview files, with a folder tree list as navigation system
 
-![](https://raw.githubusercontent.com/mgustran/proxy-resources/master/Peek%202024-08-19%2023-37.gif)
+[![](https://raw.githubusercontent.com/mgustran/proxy-resources/master/Peek%202024-08-19%2023-37.gif)](#)
 
 ### Features
 - View Folder Tree
