@@ -1,8 +1,12 @@
 #!/bin/bash
 
+# Deprecation return
+printf "This script is deprecated until migration to pyinstaller is completed\n use install-alias.sh instead\n"
+exit 0
+
 # mkdir user bin folder and move script in
 [ -d ~/bin/ ] || mkdir ~/bin/
-cp previewer.py ~/bin/preview
+cp previewer.pyz ~/bin/preview
 
 # give execution permissions
 chmod +x ~/bin/preview
@@ -33,6 +37,3 @@ echo "previewer $status_msg, check it with command preview"
 exec bash  # workaround to reload bashrc, source command not work from inside script
 
 exit 0
-
-
-

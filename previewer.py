@@ -7,6 +7,7 @@ from datetime import datetime
 
 import logging_util as logger
 
+VERSION = 'v0.2'   # Should be 4 char
 
 def init_colors():
     # Start colors in curses
@@ -42,7 +43,15 @@ class Previewer:
 
     screen = None
 
-    def __init__(self, root_dir, file_target, debug_statusbar=False):
+    def __init__(self, root_dir, file_target, debug_statusbar=False, is_zip=False):
+
+        from previewer_tree import PreviewerTree
+        from previewer_preview import PreviewerPreview
+        from previewer_keys import PreviewerKeys
+        from previewer_mouse import PreviewerMouse
+        from previewer_external import PreviewerExternal
+        from previewer_logo import PreviewerLogo
+
         self.root_dir = root_dir  # instance variable unique to each instance
         self.root_dir = self.root_dir[:-1] if self.root_dir.endswith("/") else self.root_dir
         self.target_file = file_target
@@ -53,20 +62,21 @@ class Previewer:
         self.keys = PreviewerKeys(self, self.tree_panel, self.preview_panel)
         self.mouse = PreviewerMouse(self, self.tree_panel, self.preview_panel)
         self.external = PreviewerExternal(self, self.tree_panel, self.preview_panel)
+        self.logo = PreviewerLogo(self)
+
+        self.is_zip = is_zip
 
 
     def resize_windows(self):
         self.tree_panel.tree_window.resize(self.height - 1, self.tree_panel.max_chars + 2)
-        self.preview_panel.preview_window.resize(self.height - 1, self.width - (self.tree_panel.max_chars + 4))
-        self.preview_panel.preview_window.mvwin(0, self.tree_panel.max_chars + 4)
+        self.preview_panel.preview_window.resize(self.height - 1, self.width - (self.tree_panel.max_chars + 2))
+        self.preview_panel.preview_window.mvwin(0, self.tree_panel.max_chars + 2)
 
     def draw_main(self, stdscr):
 
         self.screen = stdscr
 
         key = 0
-        # self.cursor_x = 0
-        self.tree_panel.cursor_y = 0
 
         # Clear and refresh the screen for a blank canvas
         self.screen.clear()
@@ -108,11 +118,11 @@ class Previewer:
             elif key == curses.KEY_LEFT:
                 self.keys.key_left()
 
+            elif key == 9:  # TAB
+                self.focus_on_preview = not self.focus_on_preview
+
             elif key == 10:  # ENTER
                 self.keys.key_enter()
-
-            elif key == curses.KEY_BACKSPACE:
-                self.external.open_file_with("cat", wait=True)
 
             elif key == 98:  # B
                 self.external.open_file_with("vim")
@@ -129,8 +139,15 @@ class Previewer:
             elif key == 102:  # F / FIle Stats
                 self.show_file_stats = not self.show_file_stats
 
+            # todo: Add show hidden files key
+
             elif key == curses.KEY_MOUSE:
                 self.mouse.key_mouse()
+
+            # elif key == curses.KEY_RESIZE:
+                # self.width, self.height = self.screen.getmaxyx()
+                # self.tree_panel.width, self.tree_panel.height = self.tree_panel.tree_window.getmaxyx()
+                # self.preview_panel.width, self.preview_panel.height = self.preview_panel.preview_window.getmaxyx()
 
             statusbarstr = f"'q' : exit | 'h' : help"
 
@@ -138,7 +155,7 @@ class Previewer:
                 statusbarstr = statusbarstr + (" " * 10) + ("w/h: {},{} | Key: {} | Pos: {}, {} | Len: {} | Idx: {} | Scrl1: {} | Scrl2: {} | hl: {}, {}, {}, {} | Colors: {} | err: {}"
                                 .format(self.preview_panel.width, self.preview_panel.height, key, 0, self.tree_panel.cursor_y, str(len(self.tree_panel.full_index)),
                                         self.tree_panel.cursor_y + self.tree_panel.scroll_top, self.tree_panel.scroll_top,
-                                        self.preview_panel.scroll_top_preview,
+                                        self.preview_panel.scroll_y,
                                         self.preview_panel.highlight_positions[0], self.preview_panel.highlight_positions[1],
                                         self.preview_panel.highlight_positions[2], self.preview_panel.highlight_positions[3],
                                         curses.COLORS, self.last_error))
@@ -148,10 +165,7 @@ class Previewer:
                 # Resize Windows
                 self.resize_windows()
 
-                # Draw Separator
-                for y in range(0, self.height - 1):
-                    self.screen.addstr(y, self.tree_panel.max_chars + 2, "||")
-
+                # Open File passed as argument
                 if self.target_file is not None:
                     self.external.open_file(self.target_file)
                     menu_index = next((idx for idx, x in enumerate(self.tree_panel.full_index) if x['file_path'] == self.target_file), None)
@@ -159,11 +173,11 @@ class Previewer:
                         self.tree_panel.cursor_y = menu_index
                     self.target_file = None
 
-                # Draw File Tree
+                # Draw File Tree Panel
                 self.tree_panel.draw_file_tree()
 
-                # Cursor in tree view, show initial display
-                self.preview_panel.draw_preview(key)
+                # Draw Preview Panel
+                self.preview_panel.draw_preview()
 
             except Exception as e:
                 self.last_error = str(e)
@@ -175,12 +189,12 @@ class Previewer:
                 self.msg_window.bkgd(' ', curses.color_pair(12))
                 self.msg_window.border()
                 self.msg_window.addstr(0, 17, "HELP", curses.color_pair(19))
-                self.msg_window.addstr(1, 2, "Tree Navigation", curses.color_pair(17))
-                self.msg_window.addstr(1, 19, "← → ↑ ↓ ↲ / mouse", curses.color_pair(18))
-                self.msg_window.addstr(2, 2, "File Navigation", curses.color_pair(17))
-                self.msg_window.addstr(2, 19, "← → ↑ ↓ m-scroll", curses.color_pair(18))
-                self.msg_window.addstr(4, 2, "Set Root Folder", curses.color_pair(17))
-                self.msg_window.addstr(4, 18, "ENTER on dir or ..", curses.color_pair(18))
+                self.msg_window.addstr(1, 2, "Navigation", curses.color_pair(17))
+                self.msg_window.addstr(1, 16, "← → ↑ ↓ ↲ ⭾ / mouse", curses.color_pair(18))
+                self.msg_window.addstr(3, 2, "Alternate Panel Focus", curses.color_pair(17))
+                self.msg_window.addstr(3, 32, "TAB", curses.color_pair(18))
+                self.msg_window.addstr(4, 2, "Set Root Folder / Open File", curses.color_pair(17))
+                self.msg_window.addstr(4, 31, "ENTER", curses.color_pair(18))
                 self.msg_window.addstr(6, 2, "Select / Copy", curses.color_pair(17))
                 self.msg_window.addstr(6, 17, "mouse drag / C", curses.color_pair(18))
                 self.msg_window.addstr(6, 33, "WIP", curses.color_pair(19))
@@ -225,11 +239,11 @@ class Previewer:
 
                 self.screen.attron(curses.color_pair(13))
                 self.screen.addstr(self.height-1, 0, statusbarstr)
-                self.screen.addstr(self.height-1, len(statusbarstr), (" " * (self.width - len(statusbarstr) - 1)))
+                self.screen.addstr(self.height-1, len(statusbarstr), (" " * (self.width - len(statusbarstr))))
                 self.screen.attroff(curses.color_pair(13))
             except Exception as e:
                 self.last_error = str(e)
-                logger.error(exception=e)
+                # logger.info(exception=e)
                 # logging.error(e)
                 pass
 
@@ -242,6 +256,10 @@ class Previewer:
             if self.preview_panel.preview_window is not None:
                 self.preview_panel.preview_window.refresh()
 
+            if self.preview_panel.preview_pad is not None:
+                prefix_len = len(str(len(self.preview_panel.preview_file_content))) + 4
+                self.preview_panel.preview_pad.refresh(0, self.preview_panel.scroll_x, 2, self.tree_panel.width + prefix_len, self.height - 3, self.width - 2)
+
             if self.msg_window is not None:
                 self.msg_window.refresh()
 
@@ -253,60 +271,3 @@ class Previewer:
 
     def main(self, ):
         curses.wrapper(self.draw_main)
-
-
-if __name__ == "__main__":
-
-    from previewer_tree import PreviewerTree
-    from previewer_preview import PreviewerPreview
-    from previewer_keys import PreviewerKeys
-    from previewer_mouse import PreviewerMouse
-    from previewer_external import PreviewerExternal
-
-    app_folder = os.path.expanduser('~/.config/previewer')
-    if not os.path.exists(app_folder):
-        os.makedirs(app_folder)
-
-    # log_filename = datetime.now().strftime("%Y-%m-%d__%H-%M-%S.log")
-    # logging.basicConfig(filename=os.path.join(app_folder, 'logs', log_filename),
-    #                     filemode='a',
-    #                     # format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-    #                     format='[%(asctime)s] p%(process)s {%(filename)s:%(lineno)d} %(levelname)s - %(message)s',
-    #                     # datefmt='%H:%M:%S',
-    #                     level=logging.DEBUG)
-
-    logger.init(app_folder)
-
-    current_dir = os.getcwd()
-    target_file = None
-    debug = False
-
-    args = sys.argv
-
-    if "--debug" in args:
-        debug = True
-        args.remove("--debug")
-
-    if len(args) > 1:
-        current_dir = args[1]
-
-        is_absolute = current_dir.startswith('/')
-
-        if not is_absolute:
-            if current_dir.startswith('~'):
-                current_dir = os.path.expanduser(current_dir)
-            elif current_dir.startswith("./"):
-                current_dir = current_dir[2:]
-            else:
-                current_dir = os.path.abspath(current_dir)
-
-        if not os.path.isdir(current_dir):
-            target_file = current_dir
-            current_dir = current_dir[:current_dir.rfind("/")]
-
-        if not os.path.exists(current_dir):
-            print("Invalid directory: " + current_dir, file=sys.stderr)
-            current_dir = os.getcwd()
-
-    app = Previewer(current_dir, target_file, debug)
-    app.main()

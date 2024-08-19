@@ -21,6 +21,7 @@ class PreviewerTree:
     cursor_y = 0
 
     tree_window = None
+    width, height = 0, 0
 
     def __init__(self, root: previewer.Previewer):
         self.root = root
@@ -32,6 +33,9 @@ class PreviewerTree:
 
     def init_panel(self):
         self.tree_window = curses.newwin(self.root.height - 1, self.max_chars + 2, 0, 0)
+        self.height, self.width = self.root.height - 1, self.max_chars + 2
+        # self.tree_window.bkgd(' ', curses.color_pair(12))
+        # self.tree_window.border()
 
     def reload_dirlist(self, target_dir):
         dirlist = os.listdir(target_dir)
@@ -50,8 +54,8 @@ class PreviewerTree:
                 "is_open": False,
             }
 
-            signal = ("  " * file_info['level']) + (" - " if file_info['is_open'] else " + ")
-            formatted_dirname = (signal if file_info['is_dir'] else ("   " + "  " * file_info['level'])) + file_info['file_name']
+            signal = ("  " * file_info['level']) + ("- " if file_info['is_open'] else "+ ")
+            formatted_dirname = (signal if file_info['is_dir'] else ("  " + "  " * file_info['level'])) + file_info['file_name']
             file_info["formatted_dirname"] = formatted_dirname
 
             list_final.append(file_info)
@@ -70,19 +74,31 @@ class PreviewerTree:
 
     def draw_file_tree(self):
 
+        self.height, self.width = self.tree_window.getmaxyx()
+
+        if not self.root.focus_on_preview:
+            self.tree_window.attron(curses.color_pair(11))
+        else:
+            self.tree_window.attron(curses.A_DIM)
+        self.tree_window.border()
+        self.tree_window.attroff(curses.A_DIM)
+        self.tree_window.attroff(curses.color_pair(11))
+
         root_dirname = os.path.basename(self.root.root_dir) if self.root.root_dir != '/' else '/'
+
+        self.tree_window.addstr(0, int(self.width / 2) - 6, " Folder Tree ")
 
         self.tree_window.attron(curses.A_BOLD)
         if self.cursor_y == -1:
             self.tree_window.attron(curses.color_pair(12))
 
-        self.tree_window.addstr(0, 0, " .. ")
+        self.tree_window.addstr(1, 1, ".." + " " * (self.max_chars - 2))
         self.tree_window.attroff(curses.A_BOLD)
         self.tree_window.attroff(curses.color_pair(12))
 
         self.tree_window.attron(curses.color_pair(15))
         self.tree_window.attron(curses.A_BOLD)
-        self.tree_window.addstr(1, 0, " " + root_dirname)
+        self.tree_window.addstr(2, 1, root_dirname)
         self.tree_window.attroff(curses.A_BOLD)
         extra_chars = self.max_chars - (len(root_dirname) + 1)
         self.tree_window.attroff(curses.color_pair(15))
@@ -94,7 +110,7 @@ class PreviewerTree:
             if idx < self.scroll_top:
                 continue
 
-            if y > (self.root.height - 5):
+            if y > (self.root.height - 6):
                 continue
 
             try:
@@ -110,9 +126,9 @@ class PreviewerTree:
                         self.tree_window.attron(curses.color_pair(11))
                     else:
                         self.tree_window.attron(curses.color_pair(12))
-                    self.tree_window.addstr(y + 2, 0, dir["formatted_dirname"])
+                    self.tree_window.addstr(y + 3, 1, dir["formatted_dirname"])
                     extra_chars = self.max_chars - len(dir["formatted_dirname"])
-                    self.tree_window.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
+                    self.tree_window.addstr(y + 3, len(dir["formatted_dirname"]) + 1, (" " * extra_chars) + "")
                     self.tree_window.attroff(curses.color_pair(12))
                     self.tree_window.attroff(curses.color_pair(11))
                     self.tree_window.attroff(curses.A_DIM)
@@ -122,9 +138,9 @@ class PreviewerTree:
                         self.tree_window.attron(curses.A_DIM)
                     else:
                         self.tree_window.attron(curses.color_pair(16))
-                    self.tree_window.addstr(y + 2, 0, dir["formatted_dirname"])
+                    self.tree_window.addstr(y + 3, 1, dir["formatted_dirname"])
                     extra_chars = self.max_chars - len(dir["formatted_dirname"])
-                    self.tree_window.addstr(y + 2, len(dir["formatted_dirname"]), (" " * extra_chars) + "  ")
+                    self.tree_window.addstr(y + 3, len(dir["formatted_dirname"]) + 1, (" " * extra_chars) + "")
                     if dir["file_path"] == self.root.preview_panel.preview_file_path:
                         self.tree_window.attroff(curses.color_pair(11))
                         self.tree_window.attroff(curses.A_DIM)

@@ -1,4 +1,5 @@
 import curses
+
 import logging_util as logger
 import subprocess
 import time
@@ -79,10 +80,10 @@ class PreviewerExternal:
             original = code1.split('\n')
             coloured = result1.split('\n')
 
-            if len(original) < lines7:
+            while len(original) < lines7:
                 original.append('')
 
-            if len(coloured) < lines7:
+            while len(coloured) < lines7:
                 coloured.append('')
 
             for idx, line in enumerate(original):
@@ -96,4 +97,3 @@ class PreviewerExternal:
         output = subprocess.check_output(('wc', '-l', filename))
         return int(output.decode().split(' ')[0]) + 1
 
-    # def debug(self):
