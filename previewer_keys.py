@@ -1,6 +1,6 @@
-import threading
-
-from pynput.keyboard import Listener, Key
+# import threading
+#
+# from pynput.keyboard import Listener, Key
 
 from previewer import Previewer
 from previewer_preview import PreviewerPreview
@@ -20,16 +20,16 @@ class PreviewerKeys:
         self.shift_pressed = False
 
         # Collect events until released
-        if self.keyboard_thread is None:
-            self.keyboard_thread = threading.Thread(target=self.init_keyboard, name='tamare2', args=(), daemon=True)
-            self.keyboard_thread.start()
+        # if self.keyboard_thread is None:
+        #     self.keyboard_thread = threading.Thread(target=self.init_keyboard, name='tamare2', args=(), daemon=True)
+        #     self.keyboard_thread.start()
 
-    def init_keyboard(self):
-        with Listener(
-                on_press=self.on_press,
-                on_release=self.on_release) as listener:
-            self.listener = listener
-            self.listener.join()
+    # def init_keyboard(self):
+    #     with Listener(
+    #             on_press=self.on_press,
+    #             on_release=self.on_release) as listener:
+    #         self.listener = listener
+    #         self.listener.join()
 
     def key_down(self):
         if not self.root.focus_on_preview:
@@ -116,13 +116,13 @@ class PreviewerKeys:
             self.tree.full_index = self.tree.dirlist_final.copy()
             self.tree.reload_max_chars()
 
-    # @staticmethod
-    def on_press(self, key):
-        if key == Key.shift:
-            self.shift_pressed = True
-
-
-    # @staticmethod
-    def on_release(self, key):
-        if key == Key.shift:
-            self.shift_pressed = False
+    # # @staticmethod
+    # def on_press(self, key):
+    #     if key == Key.shift:
+    #         self.shift_pressed = True
+    #
+    #
+    # # @staticmethod
+    # def on_release(self, key):
+    #     if key == Key.shift:
+    #         self.shift_pressed = False
