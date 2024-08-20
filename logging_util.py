@@ -29,6 +29,7 @@ def debug(message=None, exception=None):
 def error(message=None, exception=None):
     __log(message, exception, logging.ERROR)
 
+# todo: fix line & filename when running from zipped app
 def __log(message, exception, level=logging.DEBUG):
     if exception is not None:
         exc_type, exc_obj, exc_tb = sys.exc_info()
