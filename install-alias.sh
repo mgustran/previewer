@@ -5,6 +5,7 @@ if [ "$1" = "--fast" ]
 then
   # remove all files in build folder except six.py, which comes from some dependency
    find ./build/ -maxdepth 1  ! -name 'six.py' -type f -exec rm -f {} +
+   rm -rf build/src
 else
   rm -rf build/*
 fi
@@ -13,8 +14,9 @@ rm -rf dist/*
 
 # Copy files to build folder
 [ -d build ] || mkdir build
-cp ./*.py build/
+cp -r src build/src
 cp -r logos build/logos
+cp __main__.py build/__main__.py
 
 # Install dependencies to build folder
 if [ "$1" = "--fast" ]

@@ -1,20 +1,21 @@
 # Previewer
 Previewer is a file browser for linux terminal written in python with curses. \
-It is meant to easily preview files, with a folder tree list as navigation system
+It is meant to easily preview files, with a folder tree list as navigation system. \
+Designed to work in non-desktop environments, tty, ssh connections, devices with small displays...
 
 [![](https://raw.githubusercontent.com/mgustran/proxy-resources/master/Peek%202024-08-19%2023-37.gif)](#)
 
 ### Features
-- View Folder Tree
-- Preview non-binary files
-- Jump to vim / nano / micro editors with key B / N / M - Will migrate to configurable actions
+- Navigate filesystem through expandable Folder Tree
+- Preview files with syntax highlighting for almost any coding language
+- Jump to vim / nano / micro editor with key B / N / M
 
 ### Requirements
-- Any Linux Terminal (I don't know if it works with Windows nor am I going to check it by now)
-- Python 3
+- Linux Terminal
+- Python 3 (only for installation method 2)
 
 ### Installation
-- ~~Method 1 - Install script (recommended) :~~  Deprecated: migrating to pyinstaller \
+- ~~Method 1 - Install script (recommended) :~~  **Deprecated: migrating to pyinstaller** \
 ~~`git clone https://github.com/mgustran/previewer.git` \
 `cd previewer` \
 `bash install.sh`~~
@@ -29,7 +30,6 @@ It is meant to easily preview files, with a folder tree list as navigation syste
 ### Usage
 - `preview` Opens current working dir
 - `preview <path>` Opens folder/file passed as argument
-- `... --debug ` Add developer "useful" info to statusbar
 
 ### Licences
 - GNU GPL, see LICENCE file
