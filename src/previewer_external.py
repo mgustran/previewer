@@ -1,6 +1,5 @@
 import curses
 
-import logging_util as logger
 import subprocess
 import time
 
@@ -9,11 +8,12 @@ from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers import get_lexer_for_filename
 from pygments.util import ClassNotFound
 
-from previewer import Previewer
-from previewer_preview import PreviewerPreview
-from previewer_tree import PreviewerTree
+from src.logging_util import Log
+from src.previewer import Previewer
+from src.previewer_preview import PreviewerPreview
+from src.previewer_tree import PreviewerTree
 
-from pygments_converter import TERMINAL_CUSTOM_COLORS
+from src.pygments_converter import TERMINAL_CUSTOM_COLORS
 
 
 class suspend_curses:
@@ -91,7 +91,7 @@ class PreviewerExternal:
 
         except Exception as e:
             self.root.last_error = str(e)
-            logger.error(exception=e)
+            Log.error(exception=e)
 
     def get_file_lines(self, filename):
         output = subprocess.check_output(('wc', '-l', filename))

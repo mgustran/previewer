@@ -1,10 +1,8 @@
-#! /usr/bin/python3
-
 import curses
-import logging_util as logger
 import os
 
-import previewer
+from src.logging_util import Log
+from src.previewer import Previewer
 
 
 class PreviewerTree:
@@ -23,7 +21,7 @@ class PreviewerTree:
     tree_window = None
     width, height = 0, 0
 
-    def __init__(self, root: previewer.Previewer):
+    def __init__(self, root: Previewer):
         self.root = root
 
     def init_index(self):
@@ -154,7 +152,7 @@ class PreviewerTree:
 
             except Exception as e:
                 self.root.last_error = str(e)
-                logger.error(exception=e)
+                Log.error(exception=e)
                 pass
 
         # todo: add ".." at the end of list if

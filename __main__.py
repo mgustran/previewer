@@ -3,8 +3,8 @@
 import os
 import sys
 
-import logging_util as logger
-from previewer import Previewer
+from src.logging_util import Log
+from src.previewer import Previewer
 
 if __name__ == "__main__":
 
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     if not os.path.exists(app_folder):
         os.makedirs(app_folder)
 
-    logger.init(app_folder)
+    Log.init(app_folder)
 
     current_dir = os.getcwd()
     target_file = None

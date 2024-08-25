@@ -1,10 +1,6 @@
-# import threading
-#
-# from pynput.keyboard import Listener, Key
-
-from previewer import Previewer
-from previewer_preview import PreviewerPreview
-from previewer_tree import PreviewerTree
+from src.previewer import Previewer
+from src.previewer_preview import PreviewerPreview
+from src.previewer_tree import PreviewerTree
 
 
 class PreviewerKeys:

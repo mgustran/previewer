@@ -1,12 +1,12 @@
 import curses
-import logging_util as logger
 import threading
 
-import culour_mod as culour
+import src.culour_mod as culour
 
-import previewer
-from previewer_logo import PreviewerLogo
-from pygments_converter import format_pygments_line
+from src.previewer_logo import PreviewerLogo
+from src.logging_util import Log
+from src.previewer import Previewer
+from src.pygments_converter import format_pygments_line
 
 
 class PreviewerPreview:
@@ -26,7 +26,7 @@ class PreviewerPreview:
 
     thread = None
 
-    def __init__(self, root: previewer.Previewer, initial_display=True):
+    def __init__(self, root: Previewer, initial_display=True):
         self.root = root
         self.initial_display = initial_display
         self.initial_display_animation = True
@@ -110,7 +110,7 @@ class PreviewerPreview:
                         culour.addstr(self.preview_pad, y, 0, format_pygments_line(line))
                     except Exception as e:
                         self.root.last_error = str(e)
-                        logger.error(exception=e)
+                        Log.error(exception=e)
                     self.preview_window.attroff(curses.A_REVERSE)
                     y = y + 1
 

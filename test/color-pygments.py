@@ -1,11 +1,9 @@
-import os
-
 from pygments import highlight
 from pygments.lexers import get_lexer_for_filename, PythonLexer
 from pygments.formatters import TerminalFormatter, Terminal256Formatter, TerminalTrueColorFormatter
 
 code = 'print "Hello World"'
-with open('../previewer.py', 'r') as f:
+with open('../src/previewer.py', 'r') as f:
     code2 = f.read().encode('utf-8')
 formatter = TerminalFormatter(bg='dark')
 lexer = get_lexer_for_filename(f.name)

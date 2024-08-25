@@ -1,14 +1,13 @@
 import curses
-import os
 import time
 
-import logging_util as logger
-import previewer
+from src.logging_util import Log
+from src.previewer import Previewer, VERSION
 
 
 class PreviewerLogo:
 
-    def __init__(self, root: previewer.Previewer):
+    def __init__(self, root: Previewer):
         self.root = root
 
 
@@ -33,14 +32,14 @@ class PreviewerLogo:
         logo = self.get_logo_file(height, width)
         time.sleep(0.05)
 
-        logger.info(f'drawing animated logo {logo} with h/w: {height}/{width}')
+        Log.info(f'drawing animated logo {logo} with h/w: {height}/{width}')
 
         start_x = [0, -5, -10, -15, -20, -25, -30, -35, -40, -45, -50, -55, -60, -65, -70, -75]
         finished = [False, False, False, False, False, False, False, False, False, False, False, False, False, ]
 
         complete = False
         logo_lines = self.open_internal_file_lines(f'logos/{logo}')
-        logo_lines = [x.replace('{vs}', previewer.VERSION) for x in logo_lines]
+        logo_lines = [x.replace('{vs}', VERSION) for x in logo_lines]
 
         max_length = len(max(logo_lines, key=lambda x: len(x)))
 
@@ -92,9 +91,9 @@ class PreviewerLogo:
     def draw_logo(self, window, height, width):
         logo = self.get_logo_file(height, width)
         logo_lines = self.open_internal_file_lines(f'logos/{logo}')
-        logo_lines = [x.replace('{vs}', previewer.VERSION) for x in logo_lines]
+        logo_lines = [x.replace('{vs}', VERSION) for x in logo_lines]
 
-        logger.info(f'drawing logo {logo} with h/w: {height}/{width}')
+        Log.info(f'drawing logo {logo} with h/w: {height}/{width}')
 
         max_length = len(max(logo_lines, key=lambda x: len(x)))
 
@@ -122,16 +121,16 @@ class PreviewerLogo:
     def open_internal_file_lines(self, file):
 
         if self.root.is_zip:
-            logger.info(f'opening zipped internal file {file}')
+            zip_filename = str(__file__)[:str(__file__).find('previewer.pyz/src/') + 13]
+            Log.info(f'opening zipped internal file {file} from zip {zip_filename}')
             import zipfile
             import io
-            with zipfile.ZipFile(os.path.dirname(__file__)) as z:
+            with zipfile.ZipFile(zip_filename) as z:
                 with z.open(f'{file }', 'r') as logo_file:
                     items_file = io.TextIOWrapper(logo_file)
-                    # logo_lines = [x.replace('{vs}', VERSION) for x in items_file.readlines()]
                     logo_lines = [x for x in items_file.readlines()]
         else:
-            logger.info(f'opening direct internal file {file}')
+            Log.info(f'opening direct internal file {file}')
             with open(file, 'r') as logo_file:
                 logo_lines = [x for x in logo_file.readlines()]
 

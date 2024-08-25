@@ -1,11 +1,8 @@
 #! /usr/bin/python3
 
-import os
 import curses
-import sys
-from datetime import datetime
 
-import logging_util as logger
+from src.logging_util import Log
 
 VERSION = 'v0.2'   # Should be 4 char
 
@@ -30,27 +27,19 @@ class Previewer:
 
     focus_on_preview = False
 
-    msg_window = None
-    show_help = False
-
-    stats_window = None
-    show_file_stats = None
-
     last_error = ''
-
-    tree_panel = None
-    preview_panel = None
 
     screen = None
 
     def __init__(self, root_dir, file_target, debug_statusbar=False, is_zip=False):
 
-        from previewer_tree import PreviewerTree
-        from previewer_preview import PreviewerPreview
-        from previewer_keys import PreviewerKeys
-        from previewer_mouse import PreviewerMouse
-        from previewer_external import PreviewerExternal
-        from previewer_logo import PreviewerLogo
+        from src.previewer_tree import PreviewerTree
+        from src.previewer_preview import PreviewerPreview
+        from src.previewer_keys import PreviewerKeys
+        from src.previewer_mouse import PreviewerMouse
+        from src.previewer_external import PreviewerExternal
+        from src.previewer_logo import PreviewerLogo
+        from src.previewer_popups import PreviewerPopups
 
         self.root_dir = root_dir  # instance variable unique to each instance
         self.root_dir = self.root_dir[:-1] if self.root_dir.endswith("/") else self.root_dir
@@ -59,6 +48,7 @@ class Previewer:
 
         self.tree_panel = PreviewerTree(self)
         self.preview_panel = PreviewerPreview(self, initial_display=file_target is None)
+        self.popups = PreviewerPopups(self)
         self.keys = PreviewerKeys(self, self.tree_panel, self.preview_panel)
         self.mouse = PreviewerMouse(self, self.tree_panel, self.preview_panel)
         self.external = PreviewerExternal(self, self.tree_panel, self.preview_panel)
@@ -134,10 +124,10 @@ class Previewer:
                 self.external.open_file_with("micro")
 
             elif key == 104:  # H / Help
-                self.show_help = not self.show_help
+                self.popups.show_help = not self.popups.show_help
 
             elif key == 102:  # F / FIle Stats
-                self.show_file_stats = not self.show_file_stats
+                self.popups.show_file_stats = not self.popups.show_file_stats
 
             # todo: Add show hidden files key
 
@@ -181,58 +171,13 @@ class Previewer:
 
             except Exception as e:
                 self.last_error = str(e)
-                logger.error(exception=e)
-                pass
+                Log.error(exception=e)
+                # tb = traceback.format_exc()
+                print('tanma')
+                # Log.error(traceback.format_exc())
 
-            if self.show_help:
-                self.msg_window = curses.newwin(10, 38, int(self.height / 2) - 5, int(self.width / 2) - 19)
-                self.msg_window.bkgd(' ', curses.color_pair(12))
-                self.msg_window.border()
-                self.msg_window.addstr(0, 17, "HELP", curses.color_pair(19))
-                self.msg_window.addstr(1, 2, "Navigation", curses.color_pair(17))
-                self.msg_window.addstr(1, 16, "← → ↑ ↓ ↲ ⭾ / mouse", curses.color_pair(18))
-                self.msg_window.addstr(3, 2, "Alternate Panel Focus", curses.color_pair(17))
-                self.msg_window.addstr(3, 32, "TAB", curses.color_pair(18))
-                self.msg_window.addstr(4, 2, "Set Root Folder / Open File", curses.color_pair(17))
-                self.msg_window.addstr(4, 31, "ENTER", curses.color_pair(18))
-                self.msg_window.addstr(6, 2, "Select / Copy", curses.color_pair(17))
-                self.msg_window.addstr(6, 17, "mouse drag / C", curses.color_pair(18))
-                self.msg_window.addstr(6, 33, "WIP", curses.color_pair(19))
-                self.msg_window.addstr(8, 2, "Open in", curses.color_pair(17))
-                self.msg_window.addstr(8, 11, "vim: B  nano: N  micro: M", curses.color_pair(18))
-            else:
-                if self.msg_window is not None:
-                    self.msg_window.erase()
-                    self.msg_window = None
 
-            if self.show_file_stats:
-
-                file_name = self.preview_panel.preview_file_path if self.focus_on_preview else self.tree_panel.full_index[self.tree_panel.cursor_y]['file_path']
-                stats = os.stat(file_name)
-
-                # c_date = datetime.utcfromtimestamp(stats.st_ctime).strftime('%d/%m/%Y %H:%M:%S')
-                m_date = datetime.utcfromtimestamp(stats.st_mtime).strftime('%d/%m/%Y %H:%M:%S')
-                a_date = datetime.utcfromtimestamp(stats.st_atime).strftime('%d/%m/%Y %H:%M:%S')
-                is_dir = os.path.isdir(file_name)
-
-                self.stats_window = curses.newwin(12, 38, int(self.height / 2) - 5, int(self.width / 2) - 19)
-                self.stats_window.bkgd(' ', curses.color_pair(12))
-                self.stats_window.border()
-                self.stats_window.addstr(0, 17, "STATS", curses.color_pair(19))
-                self.stats_window.addstr(1, 2, "Location", curses.color_pair(17))
-                self.stats_window.addstr(1, 11, file_name, curses.color_pair(18))
-                self.stats_window.addstr(4, 2, "Modified", curses.color_pair(17))
-                self.stats_window.addstr(4, 15, m_date, curses.color_pair(18))
-                self.stats_window.addstr(6, 2, "Accessed", curses.color_pair(17))
-                self.stats_window.addstr(6, 15, a_date, curses.color_pair(18))
-                self.stats_window.addstr(8, 2, "Size", curses.color_pair(17))
-                self.stats_window.addstr(8, 15, str(stats.st_size) + " bytes", curses.color_pair(18))
-                self.stats_window.addstr(10, 2, "Type", curses.color_pair(17))
-                self.stats_window.addstr(10, 15, "Folder" if is_dir else "File", curses.color_pair(18))
-            else:
-                if self.stats_window is not None:
-                    self.stats_window.erase()
-                    self.stats_window = None
+            self.popups.validate_and_render_popups()
 
             # Render status bar
             try:
@@ -243,7 +188,7 @@ class Previewer:
                 self.screen.attroff(curses.color_pair(13))
             except Exception as e:
                 self.last_error = str(e)
-                # logger.info(exception=e)
+                # Log.info(exception=e)
                 # logging.error(e)
                 pass
 
@@ -260,11 +205,11 @@ class Previewer:
                 prefix_len = len(str(len(self.preview_panel.preview_file_content))) + 4
                 self.preview_panel.preview_pad.refresh(0, self.preview_panel.scroll_x, 2, self.tree_panel.width + prefix_len, self.height - 3, self.width - 2)
 
-            if self.msg_window is not None:
-                self.msg_window.refresh()
+            if self.popups.msg_window is not None:
+                self.popups.msg_window.refresh()
 
-            if self.stats_window is not None:
-                self.stats_window.refresh()
+            if self.popups.stats_window is not None:
+                self.popups.stats_window.refresh()
 
             # Wait for next input
             key = self.screen.getch()
